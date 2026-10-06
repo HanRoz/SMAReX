@@ -1,6 +1,6 @@
 import React from 'react'
 import {userAuth} from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const Dashboard = () => {
 
@@ -26,6 +26,7 @@ const Dashboard = () => {
       <div>
         <p className="text-blue-500 hover:underline cursor-pointer" onClick={handleSignOut}>Sign out</p>
       </div>
+      <p className="mb-4">go to <Link to="/profile" className="text-blue-500 hover:underline">Profile</Link></p>
     </div>
   )
 }
