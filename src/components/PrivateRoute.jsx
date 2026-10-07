@@ -3,13 +3,39 @@ import {userAuth} from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 
 const PrivateRoute = ({children}) => {
-    const {session} = userAuth();
-    if(session === undefined){
-        return <p>Loading...</p>
+    const {session, authLoading} = userAuth();
+    if(authLoading){
+        return (
+
+      <div className="
+        min-h-screen
+        flex
+        items-center
+        justify-center
+      ">
+
+        <p className="text-muted-foreground">
+          Loading...
+        </p>
+
+      </div>
+
+    );
+
     }
 
-    return<>{session ? <>{children}</> : <Navigate to="/signin" />
-    }</>;
-}
+   if (!session) {
+
+    return (
+      <Navigate
+        to="/signin"
+        replace
+      />
+    );
+
+  }
+
+  return children;
+};
 
 export default PrivateRoute
