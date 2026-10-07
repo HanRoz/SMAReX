@@ -1,13 +1,17 @@
 import React, { useState} from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { userAuth } from '../context/AuthContext'
+import { Input } from '../assets/ui/input'
+import { Label } from '../assets/ui/label'
+import { Button } from '../assets/ui/button'
+import {BookOpen} from 'lucide-react'
 
 const Signin = () => {
 
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [error, setError] = useState('');
-const [loading, setLoading] = useState('');
+const [loading, setLoading] = useState(false);
 
 const {session, signInUser} = userAuth();
 const navigate = useNavigate();
@@ -28,22 +32,94 @@ const handleSignIn = async (e) => {
   }
 }
 
- return (
-  <div>
-    <form onSubmit = {handleSignIn} className="max-w-md mx-auto pt-24">
-        <h2 className="text-2xl font-bold mb-4">Sign In</h2>
-        <p className="mb-4">Dont have and account? <Link to="/signup" className="text-blue-500 hover:underline">Sign Up</Link></p>
-        <div>
-        <input onChange={(e) => setEmail(e.target.value)} 
-        type="email" placeholder="Email" className="border border-blue-300 rounded px-4 py-2" />
-        <input onChange={(e) => setPassword(e.target.value)} 
-        type="password" placeholder="Password" className="border border-blue-300 rounded px-4 py-2 ml-2" />
+return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+
+      <div className="w-full max-w-md">
+
+        <div className="text-center mb-8">
+
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <BookOpen className="w-10 h-10 text-primary" />
+            <h1 className="text-2xl font-semibold">
+              SMAReX
+            </h1>
+          </div>
+
+          <h2 className="text-xl text-muted-foreground">
+            Sign in to your account
+          </h2>
+
         </div>
-        <button type="submit" className="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-600 mt-4">Sign In</button>
-        {error && <p className="text-red-500 pt-4">{error}</p>}
-    </form>
-  </div>
- )
+
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+
+          <form
+            onSubmit={handleSignIn}
+            className="space-y-6"
+          >
+
+            <div className="space-y-2">
+
+              <Label htmlFor="email">
+                IIUM Email
+              </Label>
+
+              <Input
+                id="email"
+                type="email"
+                placeholder="username@live.iium.edu.my"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+
+            </div>
+
+            <div className="space-y-2">
+
+              <Label htmlFor="password">
+                Password
+              </Label>
+
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Don't have an account?{' '}
+
+            <Link
+              to="/signup"
+              className="text-primary hover:underline"
+            >
+              Register here
+            </Link>
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+);
 }
 
 export default Signin

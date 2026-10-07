@@ -8,9 +8,6 @@ import { router } from './router.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <>
-      <h1 className='font-bold text-sm sm:text-xl flex flex-wrap justify-center text-center'>
-                        <span className='text-slate-500'>SMAReX</span>
-                    </h1>
       <AuthContextProvider>
         <RouterProvider router={router}/>
       </AuthContextProvider>
