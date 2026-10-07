@@ -6,11 +6,9 @@ import {Sidebar} from '../components/sidebar'
 const Saved = () => {
   return (
     <Sidebar>
-
       <div>
         <h1>Saved</h1>
       </div>
-
     </Sidebar>
   )
 }

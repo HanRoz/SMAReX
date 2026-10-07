@@ -6,11 +6,9 @@ import {Sidebar} from '../components/sidebar'
 const Upload = () => {
   return (
     <Sidebar>
-
       <div>
         <h1>Upload</h1>
       </div>
-
     </Sidebar>
   )
 }

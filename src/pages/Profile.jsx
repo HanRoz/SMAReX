@@ -44,18 +44,7 @@ const Profile = () => {
         </div>
 
       </div>
-
-      <p className="mt-8">
-        Go to{' '}
-        <Link
-          to="/dashboard"
-          className="text-blue-500 hover:underline"
-        >
-          Dashboard
-        </Link>
-      </p>
-
-    </div>
+      </div>
     </Sidebar>
   )
 }

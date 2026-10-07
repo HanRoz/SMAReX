@@ -6,11 +6,9 @@ import {Sidebar} from '../components/sidebar'
 const Library = () => {
   return (
     <Sidebar>
-
       <div>
         <h1>Library</h1>
       </div>
-
     </Sidebar>
   )
 }

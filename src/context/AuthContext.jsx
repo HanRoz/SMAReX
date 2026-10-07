@@ -7,7 +7,7 @@ export const AuthContextProvider = ({children}) => {
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
 
-//Sign Up Function
+    //Sign Up Function
     const signUpNewUser = async ({
     email,
     password,
@@ -76,12 +76,6 @@ export const AuthContextProvider = ({children}) => {
 }, []);
 
     //Sign Out Function
-    // const signOut = () => {
-    //     const {error} = supabase.auth.signOut();
-    //     if(error){
-    //         console.log("Theres an error signing out: ", error);
-    //     }
-    // }
     const signOut = async () => {
 
     const { error } = await supabase.auth.signOut();
@@ -122,7 +116,7 @@ export const AuthContextProvider = ({children}) => {
     }
 };
 
-//Fetch Profile
+    //Fetch Profile
 const fetchProfile = async (userId) => {
     const { data, error } = await supabase
         .from('profiles')
