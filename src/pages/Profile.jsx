@@ -1,13 +1,16 @@
 import React from 'react'
 import { userAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
+import {Sidebar} from '../components/sidebar'
 
 const Profile = () => {
 
   const { session, profile} = userAuth();
 
   return (
-    <div className="max-w-xl mx-auto pt-20 px-6">
+    <Sidebar>
+
+      <div className="max-w-xl mx-auto pt-20 px-6">
 
       <h1 className="text-2xl font-bold mb-6">
         Profile
@@ -53,6 +56,7 @@ const Profile = () => {
       </p>
 
     </div>
+    </Sidebar>
   )
 }
 
