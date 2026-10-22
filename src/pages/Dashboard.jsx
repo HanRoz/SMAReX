@@ -267,15 +267,11 @@ export default function Dashboard() {
               const status = getStatus(resource.security_status);
 
               return (
-                // <div
-                //   key={resource.id}
-                //   className="bg-card border border-border rounded-lg shadow-sm overflow-hidden"
-                // >
-<Link
-  key={resource.id}
-  to={`/resource/${resource.id}`}
-  className="block bg-card border border-border rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
->
+                <Link
+                  key={resource.id}
+                  to={`/resource/${resource.id}`}
+                  className="block bg-card border border-border rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                >
                 
                   <div className="flex flex-col sm:flex-row">
 
