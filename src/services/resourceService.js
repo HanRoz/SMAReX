@@ -195,3 +195,71 @@ export async function getThumbnailUrl(thumbnailPath) {
 
   return data.signedUrl;
 }
+
+export async function getDashboardResources() {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Please sign in to view resources.");
+  }
+
+  const { data, error } = await supabase
+    .from("resources")
+    .select("*")
+    .or(`security_status.eq.safe,uploader_id.eq.${user.id}`)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return data || [];
+}
+
+export async function getResourceById(resourceId) {
+  const { data, error } = await supabase
+    .from("resources")
+    .select("*")
+    .eq("id", resourceId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function downloadResourceFile(resource) {
+  const { data: { user }, error: authError } =
+    await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Please sign in to download.");
+  }
+
+  // Defense in depth. Storage RLS must enforce this too.
+  if (
+    resource.security_status !== "safe" &&
+    resource.uploader_id !== user.id
+  ) {
+    throw new Error("This resource is not available for download.");
+  }
+
+  const { data, error } = await supabase.storage
+    .from("resources")
+    .download(resource.file_path);
+
+  if (error) throw error;
+
+  const url = URL.createObjectURL(data);
+
+  try {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = resource.file_name || "resource";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+}

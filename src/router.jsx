@@ -9,18 +9,9 @@ import Library from "./pages/Library";
 import Saved from "./pages/Saved";
 import Upload from "./pages/Upload";
 import Settings from "./pages/Settings";
+import ResourceDetails from "./pages/ResourceDetails";
 
 export const router = createBrowserRouter([
-// {path: "/", element: <App />},
-// {path: "/signup", element: <Signup />},
-// {path: "/signin", element: <Signin />},
-// {path: "/dashboard", element: <PrivateRoute><Dashboard />{" "}</PrivateRoute> },
-// {path: "/profile", element: <PrivateRoute><Profile />{" "}</PrivateRoute> },
-// {path: "/library", element: <PrivateRoute><Library />{" "}</PrivateRoute> },
-// {path: "/saved", element: <PrivateRoute><Saved />{" "}</PrivateRoute> },
-// {path: "/upload", element: <PrivateRoute><Upload />{" "}</PrivateRoute> },
-// {path: "/settings", element: <PrivateRoute><Settings />{" "}</PrivateRoute> },
-
   {
     path: "/",
     element: <App />
@@ -44,6 +35,14 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     )
   },
+  {
+  path: "/resource/:id",
+  element: (
+    <PrivateRoute>
+      <ResourceDetails />
+    </PrivateRoute>
+  )
+},
 
   {
     path: "/profile",
@@ -89,4 +88,5 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     )
   }
+  
 ]);
