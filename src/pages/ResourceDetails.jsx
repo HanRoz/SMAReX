@@ -27,6 +27,8 @@ import {
   unsaveResource,
 } from "../services/savedService";
 
+import { recordDownload } from "../services/libraryService";
+
 export default function ResourceDetails() {
   const { id } = useParams();
   const { session } = userAuth();
@@ -100,7 +102,14 @@ export default function ResourceDetails() {
     try {
       setDownloading(true);
       await downloadResourceFile(resource);
-      toast.success("Download started");
+
+try {
+  await recordDownload(resource.id);
+  toast.success("Download started and added to your Library");
+} catch (historyError) {
+  console.error("Failed to record download:", historyError);
+  toast.warning("Download started, but Library history was not updated");
+}
     } catch (err) {
       toast.error(err.message || "Download failed");
     } finally {
