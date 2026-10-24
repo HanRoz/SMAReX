@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Download,
@@ -10,15 +10,18 @@ import {
   CalendarDays,
   User,
   HardDrive,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Sidebar } from "../components/sidebar";
-import {
-  getResourceById,
-  getThumbnailUrl,
-  downloadResourceFile,
-} from "../services/resourceService";
+
+// import {
+//   getResourceById,
+//   getThumbnailUrl,
+//   downloadResourceFile,
+// } from "../services/resourceService";
+
 import { userAuth } from "../context/AuthContext";
 
 import {
@@ -28,6 +31,13 @@ import {
 } from "../services/savedService";
 
 import { recordDownload } from "../services/libraryService";
+
+import {
+  getResourceById,
+  getThumbnailUrl,
+  downloadResourceFile,
+  deleteResource,
+} from "../services/resourceService";
 
 export default function ResourceDetails() {
   const { id } = useParams();
@@ -39,6 +49,8 @@ export default function ResourceDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -188,6 +200,30 @@ const handleSave = async () => {
   }
 };
 
+const handleDelete = async () => {
+  if (!resource || !isOwner || deleting) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete "${resource.title}"?\n\nThis action cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setDeleting(true);
+
+    await deleteResource(resource.id);
+
+    toast.success("Resource deleted successfully");
+    navigate("/dashboard");
+
+  } catch (err) {
+    console.error("Delete resource error:", err);
+    toast.error(err.message || "Failed to delete resource");
+  } finally {
+    setDeleting(false);
+  }
+};
   return (
     <Sidebar>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -337,6 +373,18 @@ const handleSave = async () => {
                     <Flag className="w-4 h-4" />
                     Report
                   </button>
+
+                  {isOwner && (
+  <button
+    type="button"
+    onClick={handleDelete}
+    disabled={deleting}
+    className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <Trash2 className="w-4 h-4" />
+    {deleting ? "Deleting..." : "Delete Resource"}
+  </button>
+)}
                 </div>
 
                 {!canDownload && (

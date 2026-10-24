@@ -263,3 +263,66 @@ export async function downloadResourceFile(resource) {
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 }
+
+export async function deleteResource(resourceId) {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Please sign in to delete a resource.");
+  }
+
+  // Retrieve the resource and verify ownership.
+  const { data: resource, error: fetchError } = await supabase
+    .from("resources")
+    .select("id, uploader_id, file_path, thumbnail_path")
+    .eq("id", resourceId)
+    .eq("uploader_id", user.id)
+    .single();
+
+  if (fetchError || !resource) {
+    throw new Error("Resource not found or you are not its owner.");
+  }
+
+  // Remove the document from Supabase Storage.
+  const { error: documentError } = await supabase.storage
+    .from("resources")
+    .remove([resource.file_path]);
+
+  if (documentError) {
+    throw new Error(`Document deletion failed: ${documentError.message}`);
+  }
+
+  // Remove the thumbnail, if one exists.
+  if (resource.thumbnail_path) {
+    const { error: thumbnailError } = await supabase.storage
+      .from("thumbnails")
+      .remove([resource.thumbnail_path]);
+
+    if (thumbnailError) {
+      throw new Error(`Thumbnail deletion failed: ${thumbnailError.message}`);
+    }
+  }
+
+  // Delete resource metadata from PostgreSQL.
+  const { data: deletedRows, error: deleteError } = await supabase
+    .from("resources")
+    .delete()
+    .eq("id", resourceId)
+    .eq("uploader_id", user.id)
+    .select("id");
+
+  if (deleteError) {
+    throw new Error(`Database deletion failed: ${deleteError.message}`);
+  }
+
+  if (!deletedRows?.length) {
+    throw new Error(
+      "Resource metadata was not deleted. Check your Supabase DELETE policy."
+    );
+  }
+
+  return true;
+}
