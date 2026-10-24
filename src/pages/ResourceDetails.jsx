@@ -40,6 +40,14 @@ import {
   unlikeResource,
 } from "../services/likeService";
 
+import {
+  getComments,
+  postComment,
+  editComment,
+  deleteComment,
+  validateComment,
+} from "../services/commentService";
+
 export default function ResourceDetails() {
   const { id } = useParams();
   const { session } = userAuth();
@@ -55,6 +63,14 @@ export default function ResourceDetails() {
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [liking, setLiking] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [commentPage, setCommentPage] = useState(0);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -275,6 +291,105 @@ const handleDelete = async () => {
     setDeleting(false);
   }
 };
+
+const wordCount = (value) =>
+  value.trim() ? value.trim().split(/\s+/).length : 0;
+
+async function refreshComments() {
+  const result = await getComments(id);
+  setComments(result.comments);
+  setCommentPage(0);
+  setHasMoreComments(result.hasMore);
+}
+
+useEffect(() => {
+  let active = true;
+  setComments([]);
+  setCommentPage(0);
+  setHasMoreComments(false);
+  setCommentsLoading(true);
+
+  getComments(id)
+    .then((result) => {
+      if (!active) return;
+      setComments(result.comments);
+      setHasMoreComments(result.hasMore);
+    })
+    .catch((err) => {
+      if (active) toast.error(err.message || "Could not load comments");
+    })
+    .finally(() => {
+      if (active) setCommentsLoading(false);
+    });
+
+  return () => { active = false; };
+}, [id]);
+
+async function handlePostComment() {
+  if (commentBusy) return;
+  try {
+    setCommentBusy(true);
+    await postComment(id, commentText);
+    setCommentText("");
+    await refreshComments();
+    toast.success("Comment posted");
+  } catch (err) {
+    toast.error(err.message || "Could not post comment");
+  } finally {
+    setCommentBusy(false);
+  }
+}
+
+async function handleEditComment(commentId) {
+  if (commentBusy) return;
+  try {
+    setCommentBusy(true);
+    await editComment(commentId, editText);
+    setEditingId(null);
+    setEditText("");
+    await refreshComments();
+    toast.success("Comment updated");
+  } catch (err) {
+    toast.error(err.message || "Could not edit comment");
+  } finally {
+    setCommentBusy(false);
+  }
+}
+
+async function handleDeleteComment(commentId) {
+  if (commentBusy || !window.confirm("Delete this comment?")) return;
+  try {
+    setCommentBusy(true);
+    await deleteComment(commentId);
+    await refreshComments();
+    toast.success("Comment deleted");
+  } catch (err) {
+    toast.error(err.message || "Could not delete comment");
+  } finally {
+    setCommentBusy(false);
+  }
+}
+
+async function handleLoadMoreComments() {
+  if (commentsLoading || !hasMoreComments) return;
+  try {
+    setCommentsLoading(true);
+    const nextPage = commentPage + 1;
+    const result = await getComments(id, nextPage);
+    setComments((previous) => [
+      ...previous,
+      ...result.comments.filter(
+        (comment) => !previous.some((c) => c.id === comment.id)
+      ),
+    ]);
+    setCommentPage(nextPage);
+    setHasMoreComments(result.hasMore);
+  } catch (err) {
+    toast.error(err.message || "Could not load more comments");
+  } finally {
+    setCommentsLoading(false);
+  }
+}
   return (
     <Sidebar>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -417,18 +532,18 @@ const handleDelete = async () => {
                   </button>
 
                   <button
-  type="button"
-  onClick={handleLike}
-  disabled={liking || resource.security_status !== "safe"}
-  className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
->
-  <Heart
-    className={`w-4 h-4 ${
-      isLiked ? "fill-red-500 text-red-500" : ""
-    }`}
-  />
-  {isLiked ? "Liked" : "Like"} ({likeCount})
-</button>
+                    type="button"
+                    onClick={handleLike}
+                    disabled={liking || resource.security_status !== "safe"}
+                    className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${
+                      isLiked ? "fill-red-500 text-red-500" : ""
+                      }`}
+                    />
+                    {isLiked ? "Liked" : "Like"} ({likeCount})
+                  </button>
 
                   <button
                     disabled
@@ -440,16 +555,16 @@ const handleDelete = async () => {
                   </button>
 
                   {isOwner && (
-  <button
-    type="button"
-    onClick={handleDelete}
-    disabled={deleting}
-    className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    <Trash2 className="w-4 h-4" />
-    {deleting ? "Deleting..." : "Delete Resource"}
-  </button>
-)}
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {deleting ? "Deleting..." : "Delete Resource"}
+                  </button>
+                )}
                 </div>
 
                 {!canDownload && (
@@ -461,13 +576,153 @@ const handleDelete = async () => {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-              <h2 className="text-lg font-semibold mb-2">
-                Ratings & Comments
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Ratings and comments will be available after
-                we connect these features to Supabase.
+
+<div className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-5">
+  <h2 className="text-lg font-semibold">Comments</h2>
+
+  {resource.security_status === "safe" ? (
+    <div className="space-y-2">
+      <textarea
+        value={commentText}
+        onChange={(e) => setCommentText(e.target.value)}
+        placeholder="Share feedback about this resource..."
+        rows={3}
+        maxLength={700}
+        className="w-full border border-border bg-background rounded-md p-3 text-sm resize-y"
+      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">
+          {wordCount(commentText)}/100 words · {Array.from(commentText).length}/700 characters
+        </span>
+        <button
+          type="button"
+          onClick={handlePostComment}
+          disabled={commentBusy || !commentText.trim() ||
+            wordCount(commentText) > 100}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm disabled:opacity-50"
+        >
+          {commentBusy ? "Please wait..." : "Post Comment"}
+        </button>
+      </div>
+    </div>
+  ) : (
+    <p className="text-sm text-muted-foreground">
+      Commenting is available only for resources marked safe.
+    </p>
+  )}
+
+  <div className="space-y-4">
+    {comments.map((comment) => {
+      const ownComment = comment.user_id === session?.user?.id;
+      const isEditing = editingId === comment.id;
+      const wasEdited =
+        new Date(comment.updated_at).getTime() >
+        new Date(comment.created_at).getTime() + 1000;
+
+      return (
+        <div key={comment.id} className="border-t border-border pt-4 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium">
+                {comment.authorName}
+                {ownComment && " (You)"}
               </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(comment.created_at)}
+                {wasEdited && " · Edited"}
+              </p>
+            </div>
+
+            {ownComment && (
+              <div className="flex gap-3 text-sm">
+                <button
+                  type="button"
+                  disabled={commentBusy}
+                  onClick={() => {
+                    setEditingId(comment.id);
+                    setEditText(comment.content);
+                  }}
+                  className="text-primary hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  disabled={commentBusy}
+                  onClick={() => handleDeleteComment(comment.id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editText}
+                maxLength={700}
+                rows={3}
+                onChange={(e) => setEditText(e.target.value)}
+                className="w-full border border-border bg-background rounded-md p-3 text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                {wordCount(editText)}/100 words · {Array.from(editText).length}/700 characters
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={commentBusy || !editText.trim() ||
+                    wordCount(editText) > 100}
+                  onClick={() => handleEditComment(comment.id)}
+                  className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="border border-border px-3 py-1.5 rounded-md text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {comment.content}
+            </p>
+          )}
+        </div>
+      );
+    })}
+
+    {resource.security_status === "safe" &&
+      !commentsLoading &&
+      comments.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No comments yet. Be the first to leave feedback.
+        </p>
+    )}
+
+    {hasMoreComments && (
+      <button
+        type="button"
+        onClick={handleLoadMoreComments}
+        disabled={commentsLoading}
+        className="border border-border rounded-md px-4 py-2 text-sm disabled:opacity-50"
+      >
+        {commentsLoading ? "Loading..." : "Load More Comments"}
+      </button>
+    )}
+
+    {commentsLoading && comments.length === 0 && (
+      <p className="text-sm text-muted-foreground">Loading comments...</p>
+    )}
+  </div>
+</div>
+
             </div>
           </>
         )}
