@@ -8,6 +8,7 @@ import { Button } from '../assets/ui/button'
 import {BookOpen} from 'lucide-react'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../assets/ui/select'
+import { Eye, EyeOff } from 'lucide-react'
 
 const Signup = () => {
 
@@ -19,6 +20,8 @@ const [kulliyyah, setKulliyyah] = useState('');
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [confirmPassword, setConfirmPassword] = useState('');
+const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 const [error, setError] = useState('');
 const [loading, setLoading] = useState('');
@@ -263,55 +266,87 @@ const handleSignUp = async (e) => {
 
             </div>
 
-            {/* Password */}
+              {/* Password */}
             <div className="space-y-2">
-
               <Label htmlFor="password">
                 Password
               </Label>
 
+            <div className="relative">
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+                autoComplete="new-password"
                 required
               />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+                ) : (
+                <Eye className="w-5 h-5" />
+              )}
+              </button>
+            </div>
 
               {password.length > 0 && password.length < 6 && (
                 <p className="text-xs text-red-500">
                   Password must be at least 6 characters
                 </p>
               )}
-
             </div>
 
-            {/* Confirm Password */}
+              {/* Confirm Password */}
             <div className="space-y-2">
-
               <Label htmlFor="confirmPassword">
                 Confirm Password
               </Label>
 
+            <div className="relative">
               <Input
                 id="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className="pr-10"
+                autoComplete="new-password"
                 required
               />
 
-              {confirmPassword.length > 0 &&
-                password !== confirmPassword && (
-                  <p className="text-xs text-red-500">
-                    Passwords do not match
-                  </p>
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showConfirmPassword}
+              >
+              {showConfirmPassword ? (
+                <EyeOff className="w-5 h-5" />
+                  ) : (
+                <Eye className="w-5 h-5" />
                 )}
-
+              </button>
             </div>
 
+              {confirmPassword.length > 0 &&
+                password !== confirmPassword && (
+              <p className="text-xs text-red-500">
+                Passwords do not match
+              </p>
+            )}
+            </div>
+            
             {/* Supabase error */}
             {error && (
               <p className="text-sm text-red-500">
