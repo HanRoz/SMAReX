@@ -50,6 +50,11 @@ import {
 
 import { supabase } from "../supabaseClient";
 import { RefreshCw } from "lucide-react";
+import {
+  REPORT_REASONS,
+  hasReportedResource,
+  submitResourceReport,
+} from "../services/reportService";
 
 export default function ResourceDetails() {
   const { id } = useParams();
@@ -75,6 +80,11 @@ export default function ResourceDetails() {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [hasReported, setHasReported] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -426,6 +436,68 @@ async function handleLoadMoreComments() {
     setCommentsLoading(false);
   }
 }
+
+useEffect(() => {
+  let active = true;
+
+  async function checkReport() {
+    setHasReported(false);
+
+    if (!id || !session?.user?.id) return;
+
+    try {
+      const reported = await hasReportedResource(id);
+
+      if (active) {
+        setHasReported(reported);
+      }
+    } catch (err) {
+      console.error("Failed to check report status:", err);
+    }
+  }
+
+  checkReport();
+
+  return () => {
+    active = false;
+  };
+}, [id, session?.user?.id]);
+
+const handleSubmitReport = async () => {
+  if (!resource || reportSubmitting || hasReported) return;
+
+  if (!reportReason) {
+    toast.error("Please select a report reason.");
+    return;
+  }
+
+  try {
+    setReportSubmitting(true);
+
+    await submitResourceReport(
+      resource.id,
+      reportReason,
+      reportDescription
+    );
+
+    setHasReported(true);
+    setShowReportForm(false);
+    setReportReason("");
+    setReportDescription("");
+
+    toast.success("Report submitted successfully.");
+  } catch (err) {
+    toast.error(err.message || "Failed to submit report.");
+
+    if (err.code === "23505" ||
+        err.message === "You have already reported this resource.") {
+      setHasReported(true);
+      setShowReportForm(false);
+    }
+  } finally {
+    setReportSubmitting(false);
+  }
+};
   return (
     <Sidebar>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -545,37 +617,27 @@ async function handleLoadMoreComments() {
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  {/* <button
+                  <button
                     onClick={handleDownload}
                     disabled={!canDownload || downloading}
-                    className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      hasDownloaded
+                        ? "border border-primary text-primary hover:bg-primary/10"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    }`}
                   >
+                  {hasDownloaded ? (
+                    <RefreshCw className="w-4 h-4" />
+                      ) : (
                     <Download className="w-4 h-4" />
-                    {downloading
-                      ? "Downloading..."
-                      : `Download (${formatFileSize(resource.file_size)})`}
-                  </button> */}
-                  <button
-  onClick={handleDownload}
-  disabled={!canDownload || downloading}
-  className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-    hasDownloaded
-      ? "border border-primary text-primary hover:bg-primary/10"
-      : "bg-primary text-primary-foreground hover:bg-primary/90"
-  }`}
->
-  {hasDownloaded ? (
-    <RefreshCw className="w-4 h-4" />
-  ) : (
-    <Download className="w-4 h-4" />
-  )}
+                  )}
 
-  {downloading
-    ? "Downloading..."
-    : hasDownloaded
-      ? "Download Again"
-      : `Download (${formatFileSize(resource.file_size)})`}
-</button>
+                  {downloading
+                    ? "Downloading..."
+                      : hasDownloaded
+                    ? "Download Again"
+                      : `Download (${formatFileSize(resource.file_size)})`}
+                  </button>
 
                   <button
                     onClick={handleSave}
@@ -603,13 +665,22 @@ async function handleLoadMoreComments() {
                   </button>
 
                   <button
-                    disabled
-                    title="Coming soon"
-                    className="inline-flex items-center gap-2 border rounded-md px-4 py-2 text-sm opacity-50 cursor-not-allowed"
-                  >
-                    <Flag className="w-4 h-4" />
-                    Report
-                  </button>
+  type="button"
+  onClick={() => setShowReportForm(true)}
+  disabled={
+    hasReported ||
+    reportSubmitting ||
+    resource.security_status !== "safe"
+  }
+  className={`inline-flex items-center gap-2 border rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${
+    hasReported
+      ? "border-border text-muted-foreground opacity-60"
+      : "border-border hover:bg-accent disabled:opacity-50"
+  }`}
+>
+  <Flag className={`w-4 h-4 ${hasReported ? "fill-current" : ""}`} />
+  {hasReported ? "Reported" : "Report"}
+</button>
 
                   {isOwner && (
                   <button
@@ -623,6 +694,75 @@ async function handleLoadMoreComments() {
                   </button>
                 )}
                 </div>
+
+                {showReportForm && !hasReported && (
+  <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+    <h3 className="font-semibold">Report Resource</h3>
+
+    <div className="space-y-2">
+      <label className="text-sm font-medium">
+        Reason <span className="text-red-500">*</span>
+      </label>
+
+      <select
+        value={reportReason}
+        onChange={(e) => setReportReason(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      >
+        <option value="">Select a reason</option>
+
+        {REPORT_REASONS.map((reason) => (
+          <option key={reason} value={reason}>
+            {reason}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="space-y-2">
+      <label className="text-sm font-medium">
+        Additional details (optional)
+      </label>
+
+      <textarea
+        value={reportDescription}
+        onChange={(e) => setReportDescription(e.target.value)}
+        maxLength={500}
+        rows={3}
+        placeholder="Explain why you're reporting this resource..."
+        className="w-full rounded-md border border-input bg-background p-3 text-sm resize-y"
+      />
+
+      <p className="text-xs text-muted-foreground text-right">
+        {reportDescription.length}/500 characters
+      </p>
+    </div>
+
+    <div className="flex justify-end gap-2">
+      <button
+        type="button"
+        onClick={() => {
+          setShowReportForm(false);
+          setReportReason("");
+          setReportDescription("");
+        }}
+        disabled={reportSubmitting}
+        className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        onClick={handleSubmitReport}
+        disabled={reportSubmitting || !reportReason}
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+      >
+        {reportSubmitting ? "Submitting..." : "Submit Report"}
+      </button>
+    </div>
+  </div>
+)}
 
                 {!canDownload && (
                   <p className="text-xs text-muted-foreground mt-3">
