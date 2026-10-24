@@ -50,14 +50,14 @@ let authorMap = {};
 
 if (userIds.length > 0) {
   const { data: authors, error: authorsError } = await supabase
-    .from("comment_authors")
-    .select("id, display_name")
-    .in("id", userIds);
+  .from("comment_author_names")
+  .select("user_id, display_name")
+  .in("user_id", userIds);
 
   if (authorsError) throw authorsError;
 
   authorMap = Object.fromEntries(
-    authors.map((author) => [author.id, author.display_name])
+    authors.map((author) => [author.user_id, author.display_name])
   );
 }
 

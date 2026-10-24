@@ -48,6 +48,9 @@ import {
   validateComment,
 } from "../services/commentService";
 
+import { supabase } from "../supabaseClient";
+import { RefreshCw } from "lucide-react";
+
 export default function ResourceDetails() {
   const { id } = useParams();
   const { session } = userAuth();
@@ -71,6 +74,7 @@ export default function ResourceDetails() {
   const [commentBusy, setCommentBusy] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
+  const [hasDownloaded, setHasDownloaded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -109,6 +113,37 @@ export default function ResourceDetails() {
     return () => { active = false; };
   }, [id]);
 
+    useEffect(() => {
+    let active = true;
+
+    async function checkDownloadHistory() {
+      if (!id || !session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from("download_history")
+        .select("resource_id")
+        .eq("resource_id", id)
+        .eq("user_id", session.user.id)
+        .limit(1);
+
+      if (error) {
+        console.error("Download history error:", error);
+        return;
+      }
+
+      if (active) {
+        setHasDownloaded(data.length > 0);
+      }
+    }
+
+    setHasDownloaded(false);
+    checkDownloadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [id, session?.user?.id]);
+
   const formatFileSize = (bytes) => {
     if (bytes == null) return "Unknown size";
     if (bytes < 1024 * 1024) {
@@ -137,6 +172,7 @@ export default function ResourceDetails() {
 
 try {
   await recordDownload(resource.id);
+  setHasDownloaded(true);
   toast.success("Download started and added to your Library");
 } catch (historyError) {
   console.error("Failed to record download:", historyError);
@@ -509,7 +545,7 @@ async function handleLoadMoreComments() {
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  <button
+                  {/* <button
                     onClick={handleDownload}
                     disabled={!canDownload || downloading}
                     className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -518,7 +554,28 @@ async function handleLoadMoreComments() {
                     {downloading
                       ? "Downloading..."
                       : `Download (${formatFileSize(resource.file_size)})`}
-                  </button>
+                  </button> */}
+                  <button
+  onClick={handleDownload}
+  disabled={!canDownload || downloading}
+  className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+    hasDownloaded
+      ? "border border-primary text-primary hover:bg-primary/10"
+      : "bg-primary text-primary-foreground hover:bg-primary/90"
+  }`}
+>
+  {hasDownloaded ? (
+    <RefreshCw className="w-4 h-4" />
+  ) : (
+    <Download className="w-4 h-4" />
+  )}
+
+  {downloading
+    ? "Downloading..."
+    : hasDownloaded
+      ? "Download Again"
+      : `Download (${formatFileSize(resource.file_size)})`}
+</button>
 
                   <button
                     onClick={handleSave}
