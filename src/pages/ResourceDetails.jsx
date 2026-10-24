@@ -11,16 +11,11 @@ import {
   User,
   HardDrive,
   Trash2,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Sidebar } from "../components/sidebar";
-
-// import {
-//   getResourceById,
-//   getThumbnailUrl,
-//   downloadResourceFile,
-// } from "../services/resourceService";
 
 import { userAuth } from "../context/AuthContext";
 
@@ -39,6 +34,12 @@ import {
   deleteResource,
 } from "../services/resourceService";
 
+import {
+  getResourceLikes,
+  likeResource,
+  unlikeResource,
+} from "../services/likeService";
+
 export default function ResourceDetails() {
   const { id } = useParams();
   const { session } = userAuth();
@@ -51,6 +52,9 @@ export default function ResourceDetails() {
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [liking, setLiking] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -197,6 +201,53 @@ const handleSave = async () => {
     toast.error(err.message || "Failed to update saved resource");
   } finally {
     setSaving(false);
+  }
+};
+
+useEffect(() => {
+  let active = true;
+
+  async function loadLikes() {
+    if (!id) return;
+
+    try {
+      const result = await getResourceLikes(id);
+
+      if (active) {
+        setLikeCount(result.count);
+        setIsLiked(result.isLiked);
+      }
+    } catch (err) {
+      console.error("Failed to load likes:", err);
+    }
+  }
+
+  loadLikes();
+
+  return () => {
+    active = false;
+  };
+}, [id]);
+
+const handleLike = async () => {
+  if (!resource || liking || resource.security_status !== "safe") return;
+
+  try {
+    setLiking(true);
+
+    if (isLiked) {
+      await unlikeResource(resource.id);
+    } else {
+      await likeResource(resource.id);
+    }
+
+    const result = await getResourceLikes(resource.id);
+    setLikeCount(result.count);
+    setIsLiked(result.isLiked);
+  } catch (err) {
+    toast.error(err.message || "Failed to update like");
+  } finally {
+    setLiking(false);
   }
 };
 
@@ -364,6 +415,20 @@ const handleDelete = async () => {
                     />
                     {saving ? "Please wait..." : isSaved ? "Saved" : "Save"}
                   </button>
+
+                  <button
+  type="button"
+  onClick={handleLike}
+  disabled={liking || resource.security_status !== "safe"}
+  className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  <Heart
+    className={`w-4 h-4 ${
+      isLiked ? "fill-red-500 text-red-500" : ""
+    }`}
+  />
+  {isLiked ? "Liked" : "Like"} ({likeCount})
+</button>
 
                   <button
                     disabled
