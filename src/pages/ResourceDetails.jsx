@@ -54,6 +54,7 @@ import {
   REPORT_REASONS,
   hasReportedResource,
   submitResourceReport,
+  getResourceReportCount,
 } from "../services/reportService";
 
 export default function ResourceDetails() {
@@ -85,6 +86,7 @@ export default function ResourceDetails() {
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportCount, setReportCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -463,6 +465,32 @@ useEffect(() => {
   };
 }, [id, session?.user?.id]);
 
+useEffect(() => {
+  let active = true;
+
+  async function loadReportCount() {
+    setReportCount(0);
+
+    if (!id || !session?.user?.id) return;
+
+    try {
+      const count = await getResourceReportCount(id);
+
+      if (active) {
+        setReportCount(count);
+      }
+    } catch (err) {
+      console.error("Failed to load report count:", err);
+    }
+  }
+
+  loadReportCount();
+
+  return () => {
+    active = false;
+  };
+}, [id, session?.user?.id]);
+
 const handleSubmitReport = async () => {
   if (!resource || reportSubmitting || hasReported) return;
 
@@ -479,6 +507,12 @@ const handleSubmitReport = async () => {
       reportReason,
       reportDescription
     );
+    try {
+  const updatedCount = await getResourceReportCount(resource.id);
+  setReportCount(updatedCount);
+} catch (countError) {
+  console.error("Failed to refresh report count:", countError);
+}
 
     setHasReported(true);
     setShowReportForm(false);
@@ -679,7 +713,7 @@ const handleSubmitReport = async () => {
   }`}
 >
   <Flag className={`w-4 h-4 ${hasReported ? "fill-current" : ""}`} />
-  {hasReported ? "Reported" : "Report"}
+  {hasReported ? "Reported" : "Report"} ({reportCount})
 </button>
 
                   {isOwner && (

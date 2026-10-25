@@ -8,6 +8,9 @@ import {
   FileText,
   CalendarDays,
   HardDrive,
+  Flag,
+  Download,
+  Bookmark,
 } from "lucide-react";
 
 import {
@@ -18,12 +21,22 @@ import { userAuth } from "../context/AuthContext";
 import { Badge } from "../assets/ui/badge";
 import { Sidebar } from "../components/sidebar";
 
+import { Link } from "react-router-dom";
+import { getMyReports } from "../services/reportService";
+import { supabase } from "../supabaseClient";
+
 const Profile = () => {
-  const { profile } = userAuth();
+  const { profile, session } = userAuth();
 
   const [myResources, setMyResources] = useState([]);
   const [resourcesLoading, setResourcesLoading] = useState(true);
   const [resourcesError, setResourcesError] = useState("");
+  const [myReports, setMyReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(true);
+  const [reportsError, setReportsError] = useState("");
+  const [downloadedCount, setDownloadedCount] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Retrieve actual uploaded resources from Supabase
   useEffect(() => {
@@ -141,6 +154,94 @@ if (active) {
         };
     }
   };
+
+    useEffect(() => {
+  let active = true;
+
+  async function loadReports() {
+    try {
+      setReportsLoading(true);
+      setReportsError("");
+
+      const reports = await getMyReports();
+
+      if (active) {
+        setMyReports(reports);
+      }
+    } catch (error) {
+      console.error("Failed to load reports:", error);
+
+      if (active) {
+        setReportsError(error.message || "Failed to load reports.");
+      }
+    } finally {
+      if (active) {
+        setReportsLoading(false);
+      }
+    }
+  }
+
+  loadReports();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+useEffect(() => {
+  if (!session?.user?.id) {
+    setDownloadedCount(0);
+    setSavedCount(0);
+    setStatsLoading(false);
+    return;
+  }
+
+  let active = true;
+
+  async function loadStats() {
+    setStatsLoading(true);
+
+    try {
+      const userId = session.user.id;
+
+      const [downloads, saved] = await Promise.all([
+        supabase
+          .from("download_history")
+          .select("resource_id")
+          .eq("user_id", userId),
+
+        supabase
+          .from("saved_resources")
+          .select("resource_id")
+          .eq("user_id", userId),
+      ]);
+
+      if (downloads.error) throw downloads.error;
+      if (saved.error) throw saved.error;
+
+      if (active) {
+        // Count unique resources, not repeated downloads
+        setDownloadedCount(
+          new Set(downloads.data.map((row) => row.resource_id)).size
+        );
+
+        setSavedCount(
+          new Set(saved.data.map((row) => row.resource_id)).size
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load profile statistics:", error);
+    } finally {
+      if (active) setStatsLoading(false);
+    }
+  }
+
+  loadStats();
+
+  return () => {
+    active = false;
+  };
+}, [session?.user?.id]);
 
   if (!profile) {
     return (
@@ -307,6 +408,55 @@ if (active) {
             </div>
           </div>
         </div>
+
+{/* Profile Statistics */}
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+  {/* Uploaded */}
+  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+    <div className="flex flex-col items-center gap-2 text-center">
+      <BookOpen className="w-5 h-5 text-primary" />
+      <p className="text-2xl font-semibold">
+        {resourcesLoading ? "..." : myResources.length}
+      </p>
+      <p className="text-sm text-muted-foreground">Uploaded</p>
+    </div>
+  </div>
+
+  {/* Downloaded */}
+  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+    <div className="flex flex-col items-center gap-2 text-center">
+      <Download className="w-5 h-5 text-primary" />
+      <p className="text-2xl font-semibold">
+        {statsLoading ? "..." : downloadedCount}
+      </p>
+      <p className="text-sm text-muted-foreground">Downloaded</p>
+    </div>
+  </div>
+
+  {/* Saved */}
+  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+    <div className="flex flex-col items-center gap-2 text-center">
+      <Bookmark className="w-5 h-5 text-primary" />
+      <p className="text-2xl font-semibold">
+        {statsLoading ? "..." : savedCount}
+      </p>
+      <p className="text-sm text-muted-foreground">Saved</p>
+    </div>
+  </div>
+
+  {/* Reported */}
+  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+    <div className="flex flex-col items-center gap-2 text-center">
+      <Flag className="w-5 h-5 text-destructive" />
+      <p className="text-2xl font-semibold">
+        {reportsLoading ? "..." : myReports.length}
+      </p>
+      <p className="text-sm text-muted-foreground">Reported</p>
+    </div>
+  </div>
+
+</div>
 
         {/* Uploaded Resources */}
         <div>
@@ -519,6 +669,7 @@ if (active) {
 
                       </div>
                     </div>
+                    
                   </div>
                 );
               })}
@@ -527,7 +678,91 @@ if (active) {
           )}
 
         </div>
+                        {/* My Reported Resources */}
+<div>
+  <div className="flex items-center justify-between mb-4">
+    <h2 className="text-xl font-semibold flex items-center gap-2">
+      <Flag className="w-5 h-5 text-destructive" />
+      Flagged / Reported Resources
+    </h2>
 
+    <Badge variant="secondary">
+      {reportsLoading ? "Loading..." : `${myReports.length} Reports`}
+    </Badge>
+  </div>
+
+  <p className="text-sm text-muted-foreground mb-4">
+    Resources you have reported for review.
+  </p>
+
+  {reportsLoading ? (
+    <div className="text-center py-12 bg-card border border-border rounded-lg">
+      <p className="text-muted-foreground">Loading your reports...</p>
+    </div>
+  ) : reportsError ? (
+    <div className="text-center py-12 bg-card border border-border rounded-lg">
+      <p className="text-red-600">{reportsError}</p>
+    </div>
+  ) : myReports.length === 0 ? (
+    <div className="text-center py-12 bg-card border border-border rounded-lg">
+      <Flag className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <p className="text-muted-foreground mb-2">
+        No reported resources yet
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Resources you report will appear here.
+      </p>
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {myReports.map((report) => (
+        <div
+          key={report.id}
+          className="bg-card border border-border rounded-lg p-5 shadow-sm space-y-3"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h3 className="font-semibold">
+              {report.resource?.title || "Resource unavailable"}
+            </h3>
+
+            <span className="text-xs rounded-full border border-border px-2 py-1 capitalize">
+              {report.status}
+            </span>
+          </div>
+
+          {report.resource && (
+            <p className="text-xs text-muted-foreground">
+              {report.resource.kulliyyah} · {report.resource.subject_code}
+            </p>
+          )}
+
+          <p className="text-sm">
+            <span className="font-medium">Reason:</span> {report.reason}
+          </p>
+
+          {report.description && (
+            <p className="text-sm text-muted-foreground break-words">
+              {report.description}
+            </p>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            Reported on {formatDate(report.created_at)}
+          </p>
+
+          {report.resource && (
+            <Link
+              to={`/resource/${report.resource_id}`}
+              className="inline-flex items-center text-sm text-primary hover:underline"
+            >
+              View Resource
+            </Link>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
       </div>
     </Sidebar>
   );
