@@ -11,6 +11,8 @@ import {
   Flag,
   Download,
   Bookmark,
+  ArrowUpRight,
+  Eye
 } from "lucide-react";
 
 import {
@@ -271,22 +273,10 @@ useEffect(() => {
         </div>
 
         {/* Main Profile Card */}
-        <div className="
-          bg-card
-          border
-          border-border
-          rounded-lg
-          p-8
-          shadow-sm
-        ">
-          <div className="
-            flex
-            flex-col
-            sm:flex-row
-            items-center
-            sm:items-start
-            gap-6
-          ">
+          <div className="bg-card border border-border rounded-lg p-6 md:p-8 shadow-sm">
+  <div className="flex flex-col lg:flex-row gap-8 lg:items-stretch">
+        {/* Left: Profile Details */}
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 lg:w-[38%] lg:shrink-0">
 
             {/* Profile Initials */}
             <div className="
@@ -406,57 +396,58 @@ useEffect(() => {
 
               </div>
             </div>
-          </div>
-        </div>
 
-{/* Profile Statistics */}
-<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          </div> {/* End Left: Profile Details */}
 
-  {/* Uploaded */}
-  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-    <div className="flex flex-col items-center gap-2 text-center">
-      <BookOpen className="w-5 h-5 text-primary" />
-      <p className="text-2xl font-semibold">
-        {resourcesLoading ? "..." : myResources.length}
-      </p>
-      <p className="text-sm text-muted-foreground">Uploaded</p>
-    </div>
-  </div>
+          {/* Right: Profile Statistics */}
+          <div className="
+  grid grid-cols-2 xl:grid-cols-4
+  gap-3 lg:flex-1 min-w-0
+  border-t lg:border-t-0 lg:border-l
+  border-border
+  pt-6 lg:pt-0 lg:pl-8
+">
 
-  {/* Downloaded */}
-  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-    <div className="flex flex-col items-center gap-2 text-center">
-      <Download className="w-5 h-5 text-primary" />
-      <p className="text-2xl font-semibold">
-        {statsLoading ? "..." : downloadedCount}
-      </p>
-      <p className="text-sm text-muted-foreground">Downloaded</p>
-    </div>
-  </div>
+            {/* Uploaded */}
+            <div className="bg-muted/40 border border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center">
+              <BookOpen className="w-5 h-5 text-primary" />
+              <p className="text-2xl font-semibold">
+                {resourcesLoading ? "..." : myResources.length}
+              </p>
+              <p className="text-sm text-muted-foreground">Uploaded</p>
+            </div>
 
-  {/* Saved */}
-  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-    <div className="flex flex-col items-center gap-2 text-center">
-      <Bookmark className="w-5 h-5 text-primary" />
-      <p className="text-2xl font-semibold">
-        {statsLoading ? "..." : savedCount}
-      </p>
-      <p className="text-sm text-muted-foreground">Saved</p>
-    </div>
-  </div>
+            {/* Downloaded */}
+            <div className="bg-muted/40 border border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center">
+              <Download className="w-5 h-5 text-primary" />
+              <p className="text-2xl font-semibold">
+                {statsLoading ? "..." : downloadedCount}
+              </p>
+              <p className="text-sm text-muted-foreground">Downloaded</p>
+            </div>
 
-  {/* Reported */}
-  <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-    <div className="flex flex-col items-center gap-2 text-center">
-      <Flag className="w-5 h-5 text-destructive" />
-      <p className="text-2xl font-semibold">
-        {reportsLoading ? "..." : myReports.length}
-      </p>
-      <p className="text-sm text-muted-foreground">Reported</p>
-    </div>
-  </div>
+            {/* Saved */}
+            <div className="bg-muted/40 border border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center">
+              <Bookmark className="w-5 h-5 text-primary" />
+              <p className="text-2xl font-semibold">
+                {statsLoading ? "..." : savedCount}
+              </p>
+              <p className="text-sm text-muted-foreground">Saved</p>
+            </div>
 
-</div>
+            {/* Reported */}
+            <div className="bg-muted/40 border border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center">
+              <Flag className="w-5 h-5 text-destructive" />
+              <p className="text-2xl font-semibold">
+                {reportsLoading ? "..." : myReports.length}
+              </p>
+              <p className="text-sm text-muted-foreground">Reported</p>
+            </div>
+
+          </div> {/* End Right: Profile Statistics */}
+
+  </div> {/* End Main Flex Layout */}
+</div> {/* End Main Profile Card */}
 
         {/* Uploaded Resources */}
         <div>
@@ -540,138 +531,135 @@ useEffect(() => {
           ) : (
 
             /* Real Uploaded Resource Cards */
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {myResources.map((resource) => {
                 const security = getSecurityStatus(
                   resource.security_status
                 );
 
-                return (
-                  <div
-                    key={resource.id}
-                    className="
-                      bg-card
-                      border
-                      border-border
-                      rounded-lg
-                      p-5
-                      shadow-sm
-                    "
-                  >
-                    <div className="
-                      flex
-                      flex-col
-                      sm:flex-row
-                      sm:items-start
-                      gap-4
-                    ">
+    return (
+      <div
+        key={resource.id}
+        className="bg-card border border-border rounded-lg shadow-sm overflow-hidden"
+      >
+        <div className="flex flex-col sm:flex-row h-full">
 
-{/* Resource Thumbnail */}
-<div className="w-20 h-20 bg-primary/10 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
-  {resource.thumbnailUrl ? (
-    <img
-      src={resource.thumbnailUrl}
-      alt={`${resource.title} thumbnail`}
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    <FileText className="w-8 h-8 text-primary" />
-  )}
-</div>
+          {/* Left: Thumbnail and Resource Information */}
+          <div className="flex flex-1 min-w-0 gap-4 p-5">
 
-                      {/* Resource Information */}
-                      <div className="flex-1 min-w-0">
+            {/* Resource Thumbnail */}
+            <div className="w-20 h-20 bg-primary/10 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+              {resource.thumbnailUrl ? (
+                <img
+                  src={resource.thumbnailUrl}
+                  alt={`${resource.title} thumbnail`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FileText className="w-8 h-8 text-primary" />
+              )}
+            </div>
 
-                        <div className="
-                          flex
-                          flex-wrap
-                          items-center
-                          gap-2
-                          mb-2
-                        ">
-                          <h3 className="font-semibold text-lg break-words">
-                            {resource.title}
-                          </h3>
+            {/* Resource Information */}
+            <div className="flex-1 min-w-0">
 
-                          <span className={`
-                            text-xs
-                            font-medium
-                            px-2
-                            py-1
-                            border
-                            rounded-full
-                            ${security.className}
-                          `}>
-                            {security.label}
-                          </span>
-                        </div>
+              {/* Title and Security Status */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h3 className="font-semibold text-lg break-words">
+                  {resource.title}
+                </h3>
 
-                        <p className="
-                          text-sm
-                          text-muted-foreground
-                          mb-3
-                          break-words
-                        ">
-                          {resource.description}
-                        </p>
+                <span
+                  className={`text-xs font-medium px-2 py-1 border rounded-full ${security.className}`}
+                >
+                  {security.label}
+                </span>
+              </div>
 
-                        <div className="
-                          flex
-                          flex-wrap
-                          gap-x-4
-                          gap-y-2
-                          text-xs
-                          text-muted-foreground
-                        ">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="w-3.5 h-3.5" />
-                            {resource.kulliyyah}
-                          </span>
+              {/* Description */}
+              <p className="text-sm text-muted-foreground mb-3 break-words">
+                {resource.description}
+              </p>
 
-                          <span className="flex items-center gap-1">
-                            <GraduationCap className="w-3.5 h-3.5" />
-                            {resource.subject_code}
-                          </span>
+              {/* Metadata */}
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  {resource.kulliyyah}
+                </span>
 
-                          <span className="flex items-center gap-1">
-                            <HardDrive className="w-3.5 h-3.5" />
-                            {formatFileSize(resource.file_size)}
-                          </span>
+                <span className="flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  {resource.subject_code}
+                </span>
 
-                          <span className="flex items-center gap-1">
-                            <CalendarDays className="w-3.5 h-3.5" />
-                            {formatDate(resource.created_at)}
-                          </span>
-                        </div>
+                <span className="flex items-center gap-1">
+                  <HardDrive className="w-3.5 h-3.5" />
+                  {formatFileSize(resource.file_size)}
+                </span>
 
-                        {/* Tags */}
-                        {resource.tags?.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {resource.tags.map((tag, index) => (
-                              <Badge
-                                key={`${resource.id}-${index}`}
-                                variant="outline"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                <span className="flex items-center gap-1">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  {formatDate(resource.created_at)}
+                </span>
+              </div>
 
-                        <p className="
-                          text-xs
-                          text-muted-foreground
-                          mt-3
-                          break-all
-                        ">
-                          File: {resource.file_name}
-                        </p>
+              {/* Tags */}
+              {resource.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {resource.tags.map((tag, index) => (
+                    <Badge
+                      key={`${resource.id}-${index}`}
+                      variant="outline"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
-                      </div>
-                    </div>
-                    
-                  </div>
-                );
+              {/* File Name */}
+              <p className="text-xs text-muted-foreground mt-3 break-all">
+                File: {resource.file_name}
+              </p>
+
+            </div>
+          </div>
+
+          {/* Right: Full-height See Details Panel */}
+          <Link
+            to={`/resource/${resource.id}`}
+            className="
+              group
+              flex
+              sm:w-32
+              shrink-0
+              flex-col
+              items-center
+              justify-center
+              gap-3
+              p-5
+              border-t
+              sm:border-t-0
+              sm:border-l
+              border-border
+              bg-muted/30
+              hover:bg-primary/10
+              transition-colors
+            "
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <ArrowUpRight className="w-6 h-6 text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+
+            <span className="text-sm font-semibold text-primary text-center">
+              See Details
+            </span>
+          </Link>
+
+        </div>
+      </div>
+    );
               })}
             </div>
 
@@ -679,90 +667,115 @@ useEffect(() => {
 
         </div>
                         {/* My Reported Resources */}
-<div>
-  <div className="flex items-center justify-between mb-4">
-    <h2 className="text-xl font-semibold flex items-center gap-2">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
       <Flag className="w-5 h-5 text-destructive" />
       Flagged / Reported Resources
     </h2>
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {myReports.map((report) => (
+    <div
+      key={report.id}
+      className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+    >
+      <div className="flex flex-col sm:flex-row h-full">
 
-    <Badge variant="secondary">
-      {reportsLoading ? "Loading..." : `${myReports.length} Reports`}
-    </Badge>
-  </div>
+        {/* Left: Report Information */}
+        <div className="flex-1 min-w-0 p-5 space-y-3">
 
-  <p className="text-sm text-muted-foreground mb-4">
-    Resources you have reported for review.
-  </p>
-
-  {reportsLoading ? (
-    <div className="text-center py-12 bg-card border border-border rounded-lg">
-      <p className="text-muted-foreground">Loading your reports...</p>
-    </div>
-  ) : reportsError ? (
-    <div className="text-center py-12 bg-card border border-border rounded-lg">
-      <p className="text-red-600">{reportsError}</p>
-    </div>
-  ) : myReports.length === 0 ? (
-    <div className="text-center py-12 bg-card border border-border rounded-lg">
-      <Flag className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-      <p className="text-muted-foreground mb-2">
-        No reported resources yet
-      </p>
-      <p className="text-sm text-muted-foreground">
-        Resources you report will appear here.
-      </p>
-    </div>
-  ) : (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {myReports.map((report) => (
-        <div
-          key={report.id}
-          className="bg-card border border-border rounded-lg p-5 shadow-sm space-y-3"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <h3 className="font-semibold">
+          {/* Resource Title and Status */}
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold break-words">
               {report.resource?.title || "Resource unavailable"}
             </h3>
 
-            <span className="text-xs rounded-full border border-border px-2 py-1 capitalize">
-              {report.status}
+            <span className={`text-xs font-medium px-3 py-1 rounded-full border ${
+              report.status === "pending"
+                ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                : report.status === "reviewed"
+                ? "bg-green-50 text-green-700 border-green-200"
+                : "bg-gray-100 text-gray-600 border-gray-200"
+            }`}>
+              {report.status === "pending"
+                ? "Pending"
+                : report.status === "reviewed"
+                ? "Reviewed"
+                : "Dismissed"}
             </span>
           </div>
 
-          {report.resource && (
-            <p className="text-xs text-muted-foreground">
-              {report.resource.kulliyyah} · {report.resource.subject_code}
+          {/* Resource Metadata */}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <BookOpen className="w-3.5 h-3.5" />
+              {report.resource?.kulliyyah || "Unknown"}
+            </span>
+
+            <span className="flex items-center gap-1">
+              <GraduationCap className="w-3.5 h-3.5" />
+              {report.resource?.subject_code || "Unknown"}
+            </span>
+          </div>
+
+          {/* Report Reason */}
+          <div className="flex items-start gap-2 text-sm">
+            <Flag className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+            <p>
+              <span className="font-medium">Reason: </span>
+              <span className="text-muted-foreground">
+                {report.reason}
+              </span>
             </p>
-          )}
+          </div>
 
-          <p className="text-sm">
-            <span className="font-medium">Reason:</span> {report.reason}
-          </p>
-
+          {/* Optional Report Description */}
           {report.description && (
             <p className="text-sm text-muted-foreground break-words">
               {report.description}
             </p>
           )}
 
-          <p className="text-xs text-muted-foreground">
+          {/* Report Date */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <CalendarDays className="w-4 h-4" />
             Reported on {formatDate(report.created_at)}
-          </p>
+          </div>
 
-          {report.resource && (
-            <Link
-              to={`/resource/${report.resource_id}`}
-              className="inline-flex items-center text-sm text-primary hover:underline"
-            >
-              View Resource
-            </Link>
-          )}
         </div>
-      ))}
+
+        {/* Right: View Resource Panel */}
+        {report.resource ? (
+          <Link
+            to={`/resource/${report.resource_id}`}
+            className="
+              group flex sm:w-36 shrink-0 flex-col
+              items-center justify-center gap-3
+              min-h-28 p-4
+              border-t sm:border-t-0 sm:border-l border-border
+              bg-muted/30 hover:bg-primary/10
+              transition-colors duration-200
+            "
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <Eye className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+            </div>
+
+            <span className="text-sm font-semibold text-primary text-center">
+              View Resource
+            </span>
+          </Link>
+        ) : (
+          <div className="sm:w-36 shrink-0 flex items-center justify-center p-4 border-t sm:border-t-0 sm:border-l border-border bg-muted/20">
+            <span className="text-xs text-muted-foreground text-center">
+              Unavailable
+            </span>
+          </div>
+        )}
+
+      </div>
     </div>
-  )}
+  ))}
 </div>
+
       </div>
     </Sidebar>
   );

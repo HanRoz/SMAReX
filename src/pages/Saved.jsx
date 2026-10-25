@@ -237,7 +237,16 @@ export default function Saved() {
                 {/* Remove Bookmark */}
                 <div className="border-t border-border p-3 flex justify-end">
                   <button
-                    onClick={() => handleRemove(resource.id)}
+                    // onClick={() => handleRemove(resource.id)}
+                        onClick={() => {
+      const confirmed = window.confirm(
+        `Are you sure you want to remove "${resource.title}" from your saved resources?`
+      );
+
+      if (!confirmed) return;
+
+      handleRemove(resource.id);
+    }}
                     disabled={removingId === resource.id}
                     className="inline-flex items-center gap-2 text-sm text-destructive hover:underline disabled:opacity-50"
                   >
@@ -247,6 +256,7 @@ export default function Saved() {
                       : "Remove from Saved"}
                   </button>
                 </div>
+
               </div>
             ))}
           </div>
