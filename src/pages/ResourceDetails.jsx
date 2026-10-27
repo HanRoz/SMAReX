@@ -125,7 +125,7 @@ export default function ResourceDetails() {
     return () => { active = false; };
   }, [id]);
 
-    useEffect(() => {
+  useEffect(() => {
     let active = true;
 
     async function checkDownloadHistory() {
@@ -167,10 +167,10 @@ export default function ResourceDetails() {
   const formatDate = (date) =>
     date
       ? new Date(date).toLocaleDateString("en-MY", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "Unknown date";
 
   const handleDownload = async () => {
@@ -182,14 +182,14 @@ export default function ResourceDetails() {
       setDownloading(true);
       await downloadResourceFile(resource);
 
-try {
-  await recordDownload(resource.id);
-  setHasDownloaded(true);
-  toast.success("Download started and added to your Library");
-} catch (historyError) {
-  console.error("Failed to record download:", historyError);
-  toast.warning("Download started, but Library history was not updated");
-}
+      try {
+        await recordDownload(resource.id);
+        setHasDownloaded(true);
+        toast.success("Download started and added to your Library");
+      } catch (historyError) {
+        console.error("Failed to record download:", historyError);
+        toast.warning("Download started, but Library history was not updated");
+      }
     } catch (err) {
       toast.error(err.message || "Download failed");
     } finally {
@@ -220,318 +220,318 @@ try {
     resource?.security_status === "safe" ||
     (isOwner && resource?.security_status === "pending");
 
-useEffect(() => {
-  let active = true;
+  useEffect(() => {
+    let active = true;
 
-  async function checkSaved() {
-    setIsSaved(false);
-
-    if (!id) return;
-
-    try {
-      const saved = await isResourceSaved(id);
-
-      if (active) {
-        setIsSaved(saved);
-      }
-    } catch (err) {
-      console.error("Failed to check saved status:", err);
-    }
-  }
-
-  checkSaved();
-
-  return () => {
-    active = false;
-  };
-}, [id]);
-
-const handleSave = async () => {
-  if (!resource || saving) return;
-
-  try {
-    setSaving(true);
-
-    if (isSaved) {
-      await unsaveResource(resource.id);
+    async function checkSaved() {
       setIsSaved(false);
-      toast.success("Removed from saved resources");
-    } else {
-      await saveResource(resource.id);
-      setIsSaved(true);
-      toast.success("Resource saved successfully");
+
+      if (!id) return;
+
+      try {
+        const saved = await isResourceSaved(id);
+
+        if (active) {
+          setIsSaved(saved);
+        }
+      } catch (err) {
+        console.error("Failed to check saved status:", err);
+      }
     }
-  } catch (err) {
-    toast.error(err.message || "Failed to update saved resource");
-  } finally {
-    setSaving(false);
-  }
-};
 
-useEffect(() => {
-  let active = true;
+    checkSaved();
 
-  async function loadLikes() {
-    if (!id) return;
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!resource || saving) return;
 
     try {
-      const result = await getResourceLikes(id);
+      setSaving(true);
 
-      if (active) {
-        setLikeCount(result.count);
-        setIsLiked(result.isLiked);
+      if (isSaved) {
+        await unsaveResource(resource.id);
+        setIsSaved(false);
+        toast.success("Removed from saved resources");
+      } else {
+        await saveResource(resource.id);
+        setIsSaved(true);
+        toast.success("Resource saved successfully");
       }
     } catch (err) {
-      console.error("Failed to load likes:", err);
+      toast.error(err.message || "Failed to update saved resource");
+    } finally {
+      setSaving(false);
     }
-  }
-
-  loadLikes();
-
-  return () => {
-    active = false;
   };
-}, [id]);
 
-const handleLike = async () => {
-  if (!resource || liking || resource.security_status !== "safe") return;
+  useEffect(() => {
+    let active = true;
 
-  try {
-    setLiking(true);
+    async function loadLikes() {
+      if (!id) return;
 
-    if (isLiked) {
-      await unlikeResource(resource.id);
-    } else {
-      await likeResource(resource.id);
+      try {
+        const result = await getResourceLikes(id);
+
+        if (active) {
+          setLikeCount(result.count);
+          setIsLiked(result.isLiked);
+        }
+      } catch (err) {
+        console.error("Failed to load likes:", err);
+      }
     }
 
-    const result = await getResourceLikes(resource.id);
-    setLikeCount(result.count);
-    setIsLiked(result.isLiked);
-  } catch (err) {
-    toast.error(err.message || "Failed to update like");
-  } finally {
-    setLiking(false);
-  }
-};
+    loadLikes();
 
-const handleDelete = async () => {
-  if (!resource || !isOwner || deleting) return;
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
-  const confirmed = window.confirm(
-    `Are you sure you want to permanently delete "${resource.title}"?\n\nThis action cannot be undone.`
-  );
-
-  if (!confirmed) return;
-
-  try {
-    setDeleting(true);
-
-    await deleteResource(resource.id);
-
-    toast.success("Resource deleted successfully");
-    navigate("/dashboard");
-
-  } catch (err) {
-    console.error("Delete resource error:", err);
-    toast.error(err.message || "Failed to delete resource");
-  } finally {
-    setDeleting(false);
-  }
-};
-
-const wordCount = (value) =>
-  value.trim() ? value.trim().split(/\s+/).length : 0;
-
-async function refreshComments() {
-  const result = await getComments(id);
-  setComments(result.comments);
-  setCommentPage(0);
-  setHasMoreComments(result.hasMore);
-}
-
-useEffect(() => {
-  let active = true;
-  setComments([]);
-  setCommentPage(0);
-  setHasMoreComments(false);
-  setCommentsLoading(true);
-
-  getComments(id)
-    .then((result) => {
-      if (!active) return;
-      setComments(result.comments);
-      setHasMoreComments(result.hasMore);
-    })
-    .catch((err) => {
-      if (active) toast.error(err.message || "Could not load comments");
-    })
-    .finally(() => {
-      if (active) setCommentsLoading(false);
-    });
-
-  return () => { active = false; };
-}, [id]);
-
-async function handlePostComment() {
-  if (commentBusy) return;
-  try {
-    setCommentBusy(true);
-    await postComment(id, commentText);
-    setCommentText("");
-    await refreshComments();
-    toast.success("Comment posted");
-  } catch (err) {
-    toast.error(err.message || "Could not post comment");
-  } finally {
-    setCommentBusy(false);
-  }
-}
-
-async function handleEditComment(commentId) {
-  if (commentBusy) return;
-  try {
-    setCommentBusy(true);
-    await editComment(commentId, editText);
-    setEditingId(null);
-    setEditText("");
-    await refreshComments();
-    toast.success("Comment updated");
-  } catch (err) {
-    toast.error(err.message || "Could not edit comment");
-  } finally {
-    setCommentBusy(false);
-  }
-}
-
-async function handleDeleteComment(commentId) {
-  if (commentBusy || !window.confirm("Delete this comment?")) return;
-  try {
-    setCommentBusy(true);
-    await deleteComment(commentId);
-    await refreshComments();
-    toast.success("Comment deleted");
-  } catch (err) {
-    toast.error(err.message || "Could not delete comment");
-  } finally {
-    setCommentBusy(false);
-  }
-}
-
-async function handleLoadMoreComments() {
-  if (commentsLoading || !hasMoreComments) return;
-  try {
-    setCommentsLoading(true);
-    const nextPage = commentPage + 1;
-    const result = await getComments(id, nextPage);
-    setComments((previous) => [
-      ...previous,
-      ...result.comments.filter(
-        (comment) => !previous.some((c) => c.id === comment.id)
-      ),
-    ]);
-    setCommentPage(nextPage);
-    setHasMoreComments(result.hasMore);
-  } catch (err) {
-    toast.error(err.message || "Could not load more comments");
-  } finally {
-    setCommentsLoading(false);
-  }
-}
-
-useEffect(() => {
-  let active = true;
-
-  async function checkReport() {
-    setHasReported(false);
-
-    if (!id || !session?.user?.id) return;
+  const handleLike = async () => {
+    if (!resource || liking || resource.security_status !== "safe") return;
 
     try {
-      const reported = await hasReportedResource(id);
+      setLiking(true);
 
-      if (active) {
-        setHasReported(reported);
+      if (isLiked) {
+        await unlikeResource(resource.id);
+      } else {
+        await likeResource(resource.id);
       }
+
+      const result = await getResourceLikes(resource.id);
+      setLikeCount(result.count);
+      setIsLiked(result.isLiked);
     } catch (err) {
-      console.error("Failed to check report status:", err);
+      toast.error(err.message || "Failed to update like");
+    } finally {
+      setLiking(false);
     }
-  }
-
-  checkReport();
-
-  return () => {
-    active = false;
   };
-}, [id, session?.user?.id]);
 
-useEffect(() => {
-  let active = true;
+  const handleDelete = async () => {
+    if (!resource || !isOwner || deleting) return;
 
-  async function loadReportCount() {
-    setReportCount(0);
-
-    if (!id || !session?.user?.id) return;
-
-    try {
-      const count = await getResourceReportCount(id);
-
-      if (active) {
-        setReportCount(count);
-      }
-    } catch (err) {
-      console.error("Failed to load report count:", err);
-    }
-  }
-
-  loadReportCount();
-
-  return () => {
-    active = false;
-  };
-}, [id, session?.user?.id]);
-
-const handleSubmitReport = async () => {
-  if (!resource || reportSubmitting || hasReported) return;
-
-  if (!reportReason) {
-    toast.error("Please select a report reason.");
-    return;
-  }
-
-  try {
-    setReportSubmitting(true);
-
-    await submitResourceReport(
-      resource.id,
-      reportReason,
-      reportDescription
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${resource.title}"?\n\nThis action cannot be undone.`
     );
+
+    if (!confirmed) return;
+
     try {
-  const updatedCount = await getResourceReportCount(resource.id);
-  setReportCount(updatedCount);
-} catch (countError) {
-  console.error("Failed to refresh report count:", countError);
-}
+      setDeleting(true);
 
-    setHasReported(true);
-    setShowReportForm(false);
-    setReportReason("");
-    setReportDescription("");
+      await deleteResource(resource.id);
 
-    toast.success("Report submitted successfully.");
-  } catch (err) {
-    toast.error(err.message || "Failed to submit report.");
+      toast.success("Resource deleted successfully");
+      navigate("/dashboard");
 
-    if (err.code === "23505" ||
-        err.message === "You have already reported this resource.") {
+    } catch (err) {
+      console.error("Delete resource error:", err);
+      toast.error(err.message || "Failed to delete resource");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const wordCount = (value) =>
+    value.trim() ? value.trim().split(/\s+/).length : 0;
+
+  async function refreshComments() {
+    const result = await getComments(id);
+    setComments(result.comments);
+    setCommentPage(0);
+    setHasMoreComments(result.hasMore);
+  }
+
+  useEffect(() => {
+    let active = true;
+    setComments([]);
+    setCommentPage(0);
+    setHasMoreComments(false);
+    setCommentsLoading(true);
+
+    getComments(id)
+      .then((result) => {
+        if (!active) return;
+        setComments(result.comments);
+        setHasMoreComments(result.hasMore);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message || "Could not load comments");
+      })
+      .finally(() => {
+        if (active) setCommentsLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [id]);
+
+  async function handlePostComment() {
+    if (commentBusy) return;
+    try {
+      setCommentBusy(true);
+      await postComment(id, commentText);
+      setCommentText("");
+      await refreshComments();
+      toast.success("Comment posted");
+    } catch (err) {
+      toast.error(err.message || "Could not post comment");
+    } finally {
+      setCommentBusy(false);
+    }
+  }
+
+  async function handleEditComment(commentId) {
+    if (commentBusy) return;
+    try {
+      setCommentBusy(true);
+      await editComment(commentId, editText);
+      setEditingId(null);
+      setEditText("");
+      await refreshComments();
+      toast.success("Comment updated");
+    } catch (err) {
+      toast.error(err.message || "Could not edit comment");
+    } finally {
+      setCommentBusy(false);
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    if (commentBusy || !window.confirm("Delete this comment?")) return;
+    try {
+      setCommentBusy(true);
+      await deleteComment(commentId);
+      await refreshComments();
+      toast.success("Comment deleted");
+    } catch (err) {
+      toast.error(err.message || "Could not delete comment");
+    } finally {
+      setCommentBusy(false);
+    }
+  }
+
+  async function handleLoadMoreComments() {
+    if (commentsLoading || !hasMoreComments) return;
+    try {
+      setCommentsLoading(true);
+      const nextPage = commentPage + 1;
+      const result = await getComments(id, nextPage);
+      setComments((previous) => [
+        ...previous,
+        ...result.comments.filter(
+          (comment) => !previous.some((c) => c.id === comment.id)
+        ),
+      ]);
+      setCommentPage(nextPage);
+      setHasMoreComments(result.hasMore);
+    } catch (err) {
+      toast.error(err.message || "Could not load more comments");
+    } finally {
+      setCommentsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkReport() {
+      setHasReported(false);
+
+      if (!id || !session?.user?.id) return;
+
+      try {
+        const reported = await hasReportedResource(id);
+
+        if (active) {
+          setHasReported(reported);
+        }
+      } catch (err) {
+        console.error("Failed to check report status:", err);
+      }
+    }
+
+    checkReport();
+
+    return () => {
+      active = false;
+    };
+  }, [id, session?.user?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadReportCount() {
+      setReportCount(0);
+
+      if (!id || !session?.user?.id) return;
+
+      try {
+        const count = await getResourceReportCount(id);
+
+        if (active) {
+          setReportCount(count);
+        }
+      } catch (err) {
+        console.error("Failed to load report count:", err);
+      }
+    }
+
+    loadReportCount();
+
+    return () => {
+      active = false;
+    };
+  }, [id, session?.user?.id]);
+
+  const handleSubmitReport = async () => {
+    if (!resource || reportSubmitting || hasReported) return;
+
+    if (!reportReason) {
+      toast.error("Please select a report reason.");
+      return;
+    }
+
+    try {
+      setReportSubmitting(true);
+
+      await submitResourceReport(
+        resource.id,
+        reportReason,
+        reportDescription
+      );
+      try {
+        const updatedCount = await getResourceReportCount(resource.id);
+        setReportCount(updatedCount);
+      } catch (countError) {
+        console.error("Failed to refresh report count:", countError);
+      }
+
       setHasReported(true);
       setShowReportForm(false);
+      setReportReason("");
+      setReportDescription("");
+
+      toast.success("Report submitted successfully.");
+    } catch (err) {
+      toast.error(err.message || "Failed to submit report.");
+
+      if (err.code === "23505" ||
+        err.message === "You have already reported this resource.") {
+        setHasReported(true);
+        setShowReportForm(false);
+      }
+    } finally {
+      setReportSubmitting(false);
     }
-  } finally {
-    setReportSubmitting(false);
-  }
-};
+  };
   return (
     <Sidebar>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -633,10 +633,9 @@ const handleSubmitReport = async () => {
                     Security Status:
                   </span>
                   <span
-                    className={`text-xs px-3 py-1 rounded-full border ${
-                      statusStyles[resource.security_status] ||
+                    className={`text-xs px-3 py-1 rounded-full border ${statusStyles[resource.security_status] ||
                       statusStyles.pending
-                    }`}
+                      }`}
                   >
                     {statusLabels[resource.security_status] ||
                       "Pending Review"}
@@ -654,32 +653,31 @@ const handleSubmitReport = async () => {
                   <button
                     onClick={handleDownload}
                     disabled={!canDownload || downloading}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      hasDownloaded
+                    className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${hasDownloaded
                         ? "border border-primary text-primary hover:bg-primary/10"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
+                      }`}
                   >
-                  {hasDownloaded ? (
-                    <RefreshCw className="w-4 h-4" />
-                      ) : (
-                    <Download className="w-4 h-4" />
-                  )}
+                    {hasDownloaded ? (
+                      <RefreshCw className="w-4 h-4" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
 
-                  {downloading
-                    ? "Downloading..."
+                    {downloading
+                      ? "Downloading..."
                       : hasDownloaded
-                    ? "Download Again"
-                      : `Download (${formatFileSize(resource.file_size)})`}
+                        ? "Download Again"
+                        : `Download (${formatFileSize(resource.file_size)})`}
                   </button>
 
                   <button
                     onClick={handleSave}
                     disabled={saving}
                     className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
-                >
+                  >
                     <Bookmark
-                    className={`w-4 h-4 ${isSaved ? "fill-primary text-primary" : ""}`}
+                      className={`w-4 h-4 ${isSaved ? "fill-primary text-primary" : ""}`}
                     />
                     {saving ? "Please wait..." : isSaved ? "Saved" : "Save"}
                   </button>
@@ -691,112 +689,110 @@ const handleSubmitReport = async () => {
                     className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Heart
-                      className={`w-4 h-4 ${
-                      isLiked ? "fill-red-500 text-red-500" : ""
-                      }`}
+                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""
+                        }`}
                     />
                     {isLiked ? "Liked" : "Like"} ({likeCount})
                   </button>
 
                   <button
-  type="button"
-  onClick={() => setShowReportForm(true)}
-  disabled={
-    hasReported ||
-    reportSubmitting ||
-    resource.security_status !== "safe"
-  }
-  className={`inline-flex items-center gap-2 border rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${
-    hasReported
-      ? "border-border text-muted-foreground opacity-60"
-      : "border-border hover:bg-accent disabled:opacity-50"
-  }`}
->
-  <Flag className={`w-4 h-4 ${hasReported ? "fill-current" : ""}`} />
-  {hasReported ? "Reported" : "Report"} ({reportCount})
-</button>
+                    type="button"
+                    onClick={() => setShowReportForm(true)}
+                    disabled={
+                      hasReported ||
+                      reportSubmitting ||
+                      resource.security_status !== "safe"
+                    }
+                    className={`inline-flex items-center gap-2 border rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${hasReported
+                        ? "border-border text-muted-foreground opacity-60"
+                        : "border-border hover:bg-accent disabled:opacity-50"
+                      }`}
+                  >
+                    <Flag className={`w-4 h-4 ${hasReported ? "fill-current" : ""}`} />
+                    {hasReported ? "Reported" : "Report"} ({reportCount})
+                  </button>
 
                   {isOwner && (
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {deleting ? "Deleting..." : "Delete Resource"}
-                  </button>
-                )}
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleting ? "Deleting..." : "Delete Resource"}
+                    </button>
+                  )}
                 </div>
 
                 {showReportForm && !hasReported && (
-  <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4 space-y-4">
-    <h3 className="font-semibold">Report Resource</h3>
+                  <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+                    <h3 className="font-semibold">Report Resource</h3>
 
-    <div className="space-y-2">
-      <label className="text-sm font-medium">
-        Reason <span className="text-red-500">*</span>
-      </label>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Reason <span className="text-red-500">*</span>
+                      </label>
 
-      <select
-        value={reportReason}
-        onChange={(e) => setReportReason(e.target.value)}
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-      >
-        <option value="">Select a reason</option>
+                      <select
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Select a reason</option>
 
-        {REPORT_REASONS.map((reason) => (
-          <option key={reason} value={reason}>
-            {reason}
-          </option>
-        ))}
-      </select>
-    </div>
+                        {REPORT_REASONS.map((reason) => (
+                          <option key={reason} value={reason}>
+                            {reason}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-    <div className="space-y-2">
-      <label className="text-sm font-medium">
-        Additional details (optional)
-      </label>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Additional details (optional)
+                      </label>
 
-      <textarea
-        value={reportDescription}
-        onChange={(e) => setReportDescription(e.target.value)}
-        maxLength={500}
-        rows={3}
-        placeholder="Explain why you're reporting this resource..."
-        className="w-full rounded-md border border-input bg-background p-3 text-sm resize-y"
-      />
+                      <textarea
+                        value={reportDescription}
+                        onChange={(e) => setReportDescription(e.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="Explain why you're reporting this resource..."
+                        className="w-full rounded-md border border-input bg-background p-3 text-sm resize-y"
+                      />
 
-      <p className="text-xs text-muted-foreground text-right">
-        {reportDescription.length}/500 characters
-      </p>
-    </div>
+                      <p className="text-xs text-muted-foreground text-right">
+                        {reportDescription.length}/500 characters
+                      </p>
+                    </div>
 
-    <div className="flex justify-end gap-2">
-      <button
-        type="button"
-        onClick={() => {
-          setShowReportForm(false);
-          setReportReason("");
-          setReportDescription("");
-        }}
-        disabled={reportSubmitting}
-        className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
-      >
-        Cancel
-      </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowReportForm(false);
+                          setReportReason("");
+                          setReportDescription("");
+                        }}
+                        disabled={reportSubmitting}
+                        className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
 
-      <button
-        type="button"
-        onClick={handleSubmitReport}
-        disabled={reportSubmitting || !reportReason}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {reportSubmitting ? "Submitting..." : "Submit Report"}
-      </button>
-    </div>
-  </div>
-)}
+                      <button
+                        type="button"
+                        onClick={handleSubmitReport}
+                        disabled={reportSubmitting || !reportReason}
+                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {reportSubmitting ? "Submitting..." : "Submit Report"}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {!canDownload && (
                   <p className="text-xs text-muted-foreground mt-3">
@@ -808,151 +804,151 @@ const handleSubmitReport = async () => {
 
             <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
 
-<div className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-5">
-  <h2 className="text-lg font-semibold">Comments</h2>
+              <div className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-5">
+                <h2 className="text-lg font-semibold">Comments</h2>
 
-  {resource.security_status === "safe" ? (
-    <div className="space-y-2">
-      <textarea
-        value={commentText}
-        onChange={(e) => setCommentText(e.target.value)}
-        placeholder="Share feedback about this resource..."
-        rows={3}
-        maxLength={700}
-        className="w-full border border-border bg-background rounded-md p-3 text-sm resize-y"
-      />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          {wordCount(commentText)}/100 words · {Array.from(commentText).length}/700 characters
-        </span>
-        <button
-          type="button"
-          onClick={handlePostComment}
-          disabled={commentBusy || !commentText.trim() ||
-            wordCount(commentText) > 100}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm disabled:opacity-50"
-        >
-          {commentBusy ? "Please wait..." : "Post Comment"}
-        </button>
-      </div>
-    </div>
-  ) : (
-    <p className="text-sm text-muted-foreground">
-      Commenting is available only for resources marked safe.
-    </p>
-  )}
+                {resource.security_status === "safe" ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Share feedback about this resource..."
+                      rows={3}
+                      maxLength={700}
+                      className="w-full border border-border bg-background rounded-md p-3 text-sm resize-y"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {wordCount(commentText)}/100 words · {Array.from(commentText).length}/700 characters
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handlePostComment}
+                        disabled={commentBusy || !commentText.trim() ||
+                          wordCount(commentText) > 100}
+                        className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm disabled:opacity-50"
+                      >
+                        {commentBusy ? "Please wait..." : "Post Comment"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Commenting is available only for resources marked safe.
+                  </p>
+                )}
 
-  <div className="space-y-4">
-    {comments.map((comment) => {
-      const ownComment = comment.user_id === session?.user?.id;
-      const isEditing = editingId === comment.id;
-      const wasEdited =
-        new Date(comment.updated_at).getTime() >
-        new Date(comment.created_at).getTime() + 1000;
+                <div className="space-y-4">
+                  {comments.map((comment) => {
+                    const ownComment = comment.user_id === session?.user?.id;
+                    const isEditing = editingId === comment.id;
+                    const wasEdited =
+                      new Date(comment.updated_at).getTime() >
+                      new Date(comment.created_at).getTime() + 1000;
 
-      return (
-        <div key={comment.id} className="border-t border-border pt-4 space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-medium">
-                {comment.authorName}
-                {ownComment && " (You)"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatDate(comment.created_at)}
-                {wasEdited && " · Edited"}
-              </p>
-            </div>
+                    return (
+                      <div key={comment.id} className="border-t border-border pt-4 space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {comment.authorName}
+                              {ownComment && " (You)"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(comment.created_at)}
+                              {wasEdited && " · Edited"}
+                            </p>
+                          </div>
 
-            {ownComment && (
-              <div className="flex gap-3 text-sm">
-                <button
-                  type="button"
-                  disabled={commentBusy}
-                  onClick={() => {
-                    setEditingId(comment.id);
-                    setEditText(comment.content);
-                  }}
-                  className="text-primary hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  disabled={commentBusy}
-                  onClick={() => handleDeleteComment(comment.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
+                          {ownComment && (
+                            <div className="flex gap-3 text-sm">
+                              <button
+                                type="button"
+                                disabled={commentBusy}
+                                onClick={() => {
+                                  setEditingId(comment.id);
+                                  setEditText(comment.content);
+                                }}
+                                className="text-primary hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                disabled={commentBusy}
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-red-600 hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editText}
+                              maxLength={700}
+                              rows={3}
+                              onChange={(e) => setEditText(e.target.value)}
+                              className="w-full border border-border bg-background rounded-md p-3 text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              {wordCount(editText)}/100 words · {Array.from(editText).length}/700 characters
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={commentBusy || !editText.trim() ||
+                                  wordCount(editText) > 100}
+                                onClick={() => handleEditComment(comment.id)}
+                                className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingId(null)}
+                                className="border border-border px-3 py-1.5 rounded-md text-sm"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {comment.content}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {resource.security_status === "safe" &&
+                    !commentsLoading &&
+                    comments.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        No comments yet. Be the first to leave feedback.
+                      </p>
+                    )}
+
+                  {hasMoreComments && (
+                    <button
+                      type="button"
+                      onClick={handleLoadMoreComments}
+                      disabled={commentsLoading}
+                      className="border border-border rounded-md px-4 py-2 text-sm disabled:opacity-50"
+                    >
+                      {commentsLoading ? "Loading..." : "Load More Comments"}
+                    </button>
+                  )}
+
+                  {commentsLoading && comments.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Loading comments...</p>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                value={editText}
-                maxLength={700}
-                rows={3}
-                onChange={(e) => setEditText(e.target.value)}
-                className="w-full border border-border bg-background rounded-md p-3 text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                {wordCount(editText)}/100 words · {Array.from(editText).length}/700 characters
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={commentBusy || !editText.trim() ||
-                    wordCount(editText) > 100}
-                  onClick={() => handleEditComment(comment.id)}
-                  className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
-                >
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(null)}
-                  className="border border-border px-3 py-1.5 rounded-md text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {comment.content}
-            </p>
-          )}
-        </div>
-      );
-    })}
-
-    {resource.security_status === "safe" &&
-      !commentsLoading &&
-      comments.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No comments yet. Be the first to leave feedback.
-        </p>
-    )}
-
-    {hasMoreComments && (
-      <button
-        type="button"
-        onClick={handleLoadMoreComments}
-        disabled={commentsLoading}
-        className="border border-border rounded-md px-4 py-2 text-sm disabled:opacity-50"
-      >
-        {commentsLoading ? "Loading..." : "Load More Comments"}
-      </button>
-    )}
-
-    {commentsLoading && comments.length === 0 && (
-      <p className="text-sm text-muted-foreground">Loading comments...</p>
-    )}
-  </div>
-</div>
 
             </div>
           </>

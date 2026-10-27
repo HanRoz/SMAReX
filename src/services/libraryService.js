@@ -64,9 +64,9 @@ export async function getLibraryResources() {
 
       return resource
         ? {
-            ...resource,
-            downloaded_at: item.downloaded_at,
-          }
+          ...resource,
+          downloaded_at: item.downloaded_at,
+        }
         : null;
     })
     .filter(Boolean);

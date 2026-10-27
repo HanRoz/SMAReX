@@ -36,13 +36,13 @@ export const router = createBrowserRouter([
     )
   },
   {
-  path: "/resource/:id",
-  element: (
-    <PrivateRoute>
-      <ResourceDetails />
-    </PrivateRoute>
-  )
-},
+    path: "/resource/:id",
+    element: (
+      <PrivateRoute>
+        <ResourceDetails />
+      </PrivateRoute>
+    )
+  },
 
   {
     path: "/profile",
@@ -88,5 +88,5 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     )
   }
-  
+
 ]);

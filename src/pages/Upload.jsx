@@ -278,15 +278,13 @@ export default function Upload() {
                   setIsDragging(false);
                 }}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isUploading
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isUploading
                     ? "opacity-60 cursor-not-allowed"
                     : "cursor-pointer"
-                } ${
-                  isDragging
+                  } ${isDragging
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-primary"
-                }`}
+                  }`}
               >
                 {selectedFile ? (
                   <>

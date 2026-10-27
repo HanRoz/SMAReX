@@ -108,10 +108,10 @@ export default function Library() {
   const formatDate = (date) =>
     date
       ? new Date(date).toLocaleDateString("en-MY", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "Unknown date";
 
   return (

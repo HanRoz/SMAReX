@@ -1,11 +1,11 @@
 import React from 'react'
-import {userAuth} from '../context/AuthContext'
+import { userAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 
-const PrivateRoute = ({children}) => {
-    const {session, authLoading} = userAuth();
-    if(authLoading){
-        return (
+const PrivateRoute = ({ children }) => {
+  const { session, authLoading } = userAuth();
+  if (authLoading) {
+    return (
 
       <div className="
         min-h-screen
@@ -22,9 +22,9 @@ const PrivateRoute = ({children}) => {
 
     );
 
-    }
+  }
 
-   if (!session) {
+  if (!session) {
 
     return (
       <Navigate

@@ -23,7 +23,7 @@ export async function getComments(resourceId, page = 0) {
   const from = page * 20;
   const { data, error } = await supabase
     .from("resource_comments")
-.select(`
+    .select(`
   id,
   resource_id,
   user_id,
@@ -33,41 +33,41 @@ export async function getComments(resourceId, page = 0) {
   profiles:profiles!resource_comments_profile_fkey (
     display_name
   )
-`)    .eq("resource_id", resourceId)
+`).eq("resource_id", resourceId)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .range(from, from + 20);
 
-if (error) throw error;
+  if (error) throw error;
 
-const visibleComments = data.slice(0, 20);
+  const visibleComments = data.slice(0, 20);
 
-const userIds = [...new Set(
-  visibleComments.map((comment) => comment.user_id)
-)];
+  const userIds = [...new Set(
+    visibleComments.map((comment) => comment.user_id)
+  )];
 
-let authorMap = {};
+  let authorMap = {};
 
-if (userIds.length > 0) {
-  const { data: authors, error: authorsError } = await supabase
-  .from("comment_author_names")
-  .select("user_id, display_name")
-  .in("user_id", userIds);
+  if (userIds.length > 0) {
+    const { data: authors, error: authorsError } = await supabase
+      .from("comment_author_names")
+      .select("user_id, display_name")
+      .in("user_id", userIds);
 
-  if (authorsError) throw authorsError;
+    if (authorsError) throw authorsError;
 
-  authorMap = Object.fromEntries(
-    authors.map((author) => [author.user_id, author.display_name])
-  );
-}
+    authorMap = Object.fromEntries(
+      authors.map((author) => [author.user_id, author.display_name])
+    );
+  }
 
-return {
-  comments: visibleComments.map((comment) => ({
-    ...comment,
-    authorName: authorMap[comment.user_id] || "Student",
-  })),
-  hasMore: data.length > 20,
-};
+  return {
+    comments: visibleComments.map((comment) => ({
+      ...comment,
+      authorName: authorMap[comment.user_id] || "Student",
+    })),
+    hasMore: data.length > 20,
+  };
 }
 
 export async function postComment(resourceId, content) {

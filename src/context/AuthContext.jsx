@@ -10,7 +10,6 @@ import { supabase } from "../supabaseClient";
 
 const AuthContext = createContext();
 
-
 export const AuthContextProvider = ({ children }) => {
 
   // null = no session OR session hasn't been checked yet
@@ -24,7 +23,7 @@ export const AuthContextProvider = ({ children }) => {
   // the browser has an existing login session.
   const [authLoading, setAuthLoading] = useState(true);
 
-//Fetch Profile Function
+  //Fetch Profile Function
   const fetchProfile = async (userId) => {
 
     const { data, error } = await supabase
@@ -41,7 +40,7 @@ export const AuthContextProvider = ({ children }) => {
     setProfile(data);
   };
 
-//Check if the user is already logged in when the app first loads or refreshes. If so, fetch their profile.
+  //Check if the user is already logged in when the app first loads or refreshes. If so, fetch their profile.
   useEffect(() => {
 
     // Runs when the app first loads or refreshes
@@ -112,7 +111,7 @@ export const AuthContextProvider = ({ children }) => {
 
   }, []);
 
-//Sign Up Function
+  //Sign Up Function
   const signUpNewUser = async ({
     email,
     password,
@@ -169,7 +168,7 @@ export const AuthContextProvider = ({ children }) => {
 
   };
 
-//Sign In Function
+  //Sign In Function
   const signInUser = async (
     email,
     password
@@ -224,7 +223,7 @@ export const AuthContextProvider = ({ children }) => {
 
   };
 
-//Sign Out Funtion
+  //Sign Out Funtion
   const signOut = async () => {
 
     const { error } =

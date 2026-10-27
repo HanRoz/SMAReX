@@ -117,8 +117,7 @@ export default function Settings() {
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
 
   const switchClass = (enabled) =>
-    `relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
-      enabled ? "bg-primary" : "bg-muted"
+    `relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${enabled ? "bg-primary" : "bg-muted"
     }`;
 
   const PreferenceSwitch = ({ settingKey }) => (
@@ -133,11 +132,10 @@ export default function Settings() {
       className={switchClass(settings[settingKey])}
     >
       <span
-        className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-          settings[settingKey]
-            ? "translate-x-5"
-            : "translate-x-0.5"
-        }`}
+        className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${settings[settingKey]
+          ? "translate-x-5"
+          : "translate-x-0.5"
+          }`}
       />
     </button>
   );

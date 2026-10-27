@@ -126,11 +126,10 @@ export function Sidebar({ children }) {
 
           <Link
             to="/dashboard"
-            className={`flex items-center ${
-              isCollapsed
+            className={`flex items-center ${isCollapsed
                 ? 'justify-center'
                 : 'gap-2'
-            }`}
+              }`}
           >
 
             <BookOpen className="w-8 h-8 text-primary flex-shrink-0" />

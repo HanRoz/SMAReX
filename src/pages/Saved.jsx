@@ -124,10 +124,10 @@ export default function Saved() {
   const formatDate = (date) =>
     date
       ? new Date(date).toLocaleDateString("en-MY", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "Unknown date";
 
   return (
@@ -238,15 +238,15 @@ export default function Saved() {
                 <div className="border-t border-border p-3 flex justify-end">
                   <button
                     // onClick={() => handleRemove(resource.id)}
-                        onClick={() => {
-      const confirmed = window.confirm(
-        `Are you sure you want to remove "${resource.title}" from your saved resources?`
-      );
+                    onClick={() => {
+                      const confirmed = window.confirm(
+                        `Are you sure you want to remove "${resource.title}" from your saved resources?`
+                      );
 
-      if (!confirmed) return;
+                      if (!confirmed) return;
 
-      handleRemove(resource.id);
-    }}
+                      handleRemove(resource.id);
+                    }}
                     disabled={removingId === resource.id}
                     className="inline-flex items-center gap-2 text-sm text-destructive hover:underline disabled:opacity-50"
                   >

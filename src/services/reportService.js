@@ -33,13 +33,13 @@ export async function submitResourceReport(resourceId, reason, description = "")
   }
 
   const {
-  data: { user },
-  error: authError,
-} = await supabase.auth.getUser();
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-if (authError || !user) {
-  throw new Error("Please sign in to report a resource.");
-}
+  if (authError || !user) {
+    throw new Error("Please sign in to report a resource.");
+  }
 
   const { error } = await supabase
     .from("resource_reports")

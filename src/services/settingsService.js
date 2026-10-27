@@ -33,9 +33,9 @@ export async function getUserSettings() {
 
   return data
     ? {
-        ...defaultSettings,
-        ...data,
-      }
+      ...defaultSettings,
+      ...data,
+    }
     : { ...defaultSettings };
 }
 

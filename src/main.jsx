@@ -7,7 +7,7 @@ import './index.css'
 import { router } from './router.jsx'
 
 createRoot(document.getElementById('root')).render(
-    <StrictMode>
+  <StrictMode>
     <AuthContextProvider>
       <RouterProvider router={router} />
       <Toaster richColors position="top-center" />
