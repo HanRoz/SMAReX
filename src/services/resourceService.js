@@ -16,6 +16,40 @@ const IMAGE_TYPES = {
   "image/webp": ".webp",
 };
 
+async function calculateFileSHA256(file) {
+  const buffer = await file.arrayBuffer();
+
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    buffer
+  );
+
+  return Array.from(
+    new Uint8Array(hashBuffer),
+    (byte) => byte.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+async function checkDuplicateFile(sha256) {
+  const { data, error } = await supabase
+    .from("resources")
+    .select("id, title")
+    .eq("file_sha256", sha256)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `Failed to check duplicate files: ${error.message}`
+    );
+  }
+
+  if (data) {
+    throw new Error(
+      `Upload rejected: This material already exists in SMAReX ("${data.title}").`
+    );
+  }
+}
 
 async function scanFileWithVirusTotal(file, onProgress) {
   const maxWaitTime = 10 * 60 * 1000; // 10 minutes
@@ -219,7 +253,13 @@ export async function uploadResource({
     throw new Error("Please sign in before uploading.");
   }
 
-  // SECURITY CHECK:
+  // Step 1: Calculate SHA-256 before scanning
+  const fileSHA256 = await calculateFileSHA256(file);
+
+  // Step 2: Check if the file already exists
+  await checkDuplicateFile(fileSHA256);
+
+  // Step 3:SECURITY CHECK:
   // Do not upload anything until VirusTotal confirms a clean scan.
   const scanResult = await scanFileWithVirusTotal(file, onScanProgress);
 
@@ -297,7 +337,15 @@ export async function uploadResource({
       .select()
       .single();
 
-    if (databaseError) throw databaseError;
+    if (databaseError) {
+      if (databaseError.code === "23505") {
+        throw new Error(
+          "Upload rejected: This material already exists in SMAReX."
+        );
+      }
+
+      throw databaseError;
+    }
 
     console.log("Resource uploaded successfully:", resourceId);
 
