@@ -67,9 +67,9 @@ async function scanFileWithVirusTotal(file, onProgress) {
 
       const err = new Error(
         serverError?.summary ||
-          serverError?.error ||
-          error.message ||
-          "VirusTotal scan failed.",
+        serverError?.error ||
+        error.message ||
+        "VirusTotal scan failed.",
       );
 
       err.code = "SCAN_UNAVAILABLE";
@@ -124,8 +124,8 @@ async function scanFileWithVirusTotal(file, onProgress) {
 
     const scanResult = {
       ...data,
-      reportUrl:
-        data.reportUrl || `https://www.virustotal.com/gui/file/${sha256}`,
+      sha256,
+      reportUrl: `https://www.virustotal.com/gui/file/${sha256}`,
     };
 
     onProgress?.("Security scan passed. Preparing your upload...");
@@ -221,7 +221,7 @@ export async function uploadResource({
 
   // SECURITY CHECK:
   // Do not upload anything until VirusTotal confirms a clean scan.
-const scanResult = await scanFileWithVirusTotal(file, onScanProgress);
+  const scanResult = await scanFileWithVirusTotal(file, onScanProgress);
 
   if (scanResult.allowed !== true) {
     throw new Error("The file has not passed the security scan.");
@@ -288,6 +288,11 @@ const scanResult = await scanFileWithVirusTotal(file, onScanProgress);
         file_size: file.size,
         thumbnail_path: thumbnailPath,
         security_status: "safe",
+
+        // Security metadata
+        file_sha256: scanResult.sha256,
+        vt_report_url: scanResult.reportUrl,
+        vt_scanned_at: new Date().toISOString(),
       })
       .select()
       .single();

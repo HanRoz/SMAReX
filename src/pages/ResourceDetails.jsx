@@ -6,6 +6,7 @@ import {
   Bookmark,
   Flag,
   Shield,
+  ExternalLink,
   FileText,
   CalendarDays,
   User,
@@ -642,6 +643,23 @@ export default function ResourceDetails() {
                   </span>
                 </div>
 
+                {/* VirusTotal Security Details */}
+                {resource.security_status === "safe" &&
+                  /^[a-fA-F0-9]{64}$/.test(resource.file_sha256 || "") && (
+                    <div className="mb-6">
+                      <a
+                        href={`https://www.virustotal.com/gui/file/${resource.file_sha256}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                      >
+                        <Shield className="w-4 h-4 text-green-600" />
+                        Security Details
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  )}
+
                 {resource.security_status === "pending" && (
                   <p className="text-sm text-yellow-700 mb-4">
                     This resource has not been scanned yet.
@@ -654,8 +672,8 @@ export default function ResourceDetails() {
                     onClick={handleDownload}
                     disabled={!canDownload || downloading}
                     className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${hasDownloaded
-                        ? "border border-primary text-primary hover:bg-primary/10"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      ? "border border-primary text-primary hover:bg-primary/10"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
                       }`}
                   >
                     {hasDownloaded ? (
@@ -704,8 +722,8 @@ export default function ResourceDetails() {
                       resource.security_status !== "safe"
                     }
                     className={`inline-flex items-center gap-2 border rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${hasReported
-                        ? "border-border text-muted-foreground opacity-60"
-                        : "border-border hover:bg-accent disabled:opacity-50"
+                      ? "border-border text-muted-foreground opacity-60"
+                      : "border-border hover:bg-accent disabled:opacity-50"
                       }`}
                   >
                     <Flag className={`w-4 h-4 ${hasReported ? "fill-current" : ""}`} />
