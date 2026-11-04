@@ -283,8 +283,8 @@ export default function Settings() {
           </p>
         </div>
 
-        {/* Appearance */}
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        {/* Appearance. THIS CODE IS COMMENTED OUT FOR NOW AS THE FEATURE IS NOT CONFIRMED TO BE IMPLEMENTED OR NOT */}
+        {/* <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-6">
             Appearance
           </h2>
@@ -294,7 +294,7 @@ export default function Settings() {
             description="Switch to dark theme"
             settingKey="dark_mode"
           />
-        </div>
+        </div> */}
 
       </div>
     </Sidebar>

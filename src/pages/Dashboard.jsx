@@ -582,8 +582,8 @@ export default function Dashboard() {
                     >
                       <Heart
                         className={`w-5 h-5 ${actions.isLiked
-                            ? "fill-red-500 text-red-500"
-                            : ""
+                          ? "fill-red-500 text-red-500"
+                          : ""
                           }`}
                       />
                       <span>
@@ -626,7 +626,6 @@ export default function Dashboard() {
                     {/* Save */}
                     <button
                       type="button"
-                      // onClick={() => handleDashboardSave(resource)}
                       onClick={() => {
                         // Ask for confirmation only when removing a bookmark
                         if (actions.isSaved) {
@@ -645,8 +644,8 @@ export default function Dashboard() {
                     >
                       <Bookmark
                         className={`w-5 h-5 ${actions.isSaved
-                            ? "fill-primary text-primary"
-                            : ""
+                          ? "fill-primary text-primary"
+                          : ""
                           }`}
                       />
                       <span>{actions.isSaved ? "Saved" : "Save"}</span>

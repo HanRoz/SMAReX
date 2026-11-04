@@ -13,6 +13,7 @@ import {
   HardDrive,
   Trash2,
   Heart,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +89,7 @@ export default function ResourceDetails() {
   const [reportDescription, setReportDescription] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportCount, setReportCount] = useState(0);
+  const [showAISummary, setShowAISummary] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -249,6 +251,15 @@ export default function ResourceDetails() {
 
   const handleSave = async () => {
     if (!resource || saving) return;
+
+    // Ask for confirmation only when removing a saved resource
+    if (isSaved) {
+      const confirmed = window.confirm(
+        `Are you sure you want to remove "${resource.title}" from your saved resources?`
+      );
+
+      if (!confirmed) return;
+    }
 
     try {
       setSaving(true);
@@ -628,37 +639,45 @@ export default function ResourceDetails() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 mb-6">
-                  <Shield className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    Security Status:
-                  </span>
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full border ${statusStyles[resource.security_status] ||
-                      statusStyles.pending
-                      }`}
-                  >
-                    {statusLabels[resource.security_status] ||
-                      "Pending Review"}
-                  </span>
-                </div>
+                {/* Security Status and VirusTotal Details */}
+                <div className="flex flex-wrap items-center gap-3 mb-6">
 
-                {/* VirusTotal Security Details */}
-                {resource.security_status === "safe" &&
-                  /^[a-fA-F0-9]{64}$/.test(resource.file_sha256 || "") && (
-                    <div className="mb-6">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-muted-foreground" />
+
+                    <span className="text-sm font-medium">
+                      Security Status:
+                    </span>
+
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full border ${statusStyles[resource.security_status] ||
+                        statusStyles.pending
+                        }`}
+                    >
+                      {statusLabels[resource.security_status] || "Pending Review"}
+                    </span>
+                  </div>
+
+                  {/* VirusTotal Security Details */}
+                  {resource.security_status === "safe" &&
+                    /^[a-fA-F0-9]{64}$/.test(resource.file_sha256 || "") && (
                       <a
                         href={`https://www.virustotal.com/gui/file/${resource.file_sha256}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                        className="
+          inline-flex items-center gap-2
+          border border-border rounded-md
+          px-3 py-1.5 text-xs font-medium
+          hover:bg-accent transition-colors
+        "
                       >
-                        <Shield className="w-4 h-4 text-green-600" />
                         Security Details
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </a>
-                    </div>
-                  )}
+                    )}
+
+                </div>
 
                 {resource.security_status === "pending" && (
                   <p className="text-sm text-yellow-700 mb-4">
@@ -667,7 +686,95 @@ export default function ResourceDetails() {
                   </p>
                 )}
 
+                {/* AI Summarization Section */}
+                <div className="mb-6">
+
+                  {/* AI Summary Content */}
+                  {showAISummary && (
+                    <div className="
+      mt-4
+      p-5
+      bg-secondary
+      border border-border
+      rounded-xl
+      animate-in fade-in slide-in-from-top-2 duration-300
+    ">
+
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+
+                        <h3 className="font-semibold text-foreground">
+                          AI-Generated Summary
+                        </h3>
+
+                      </div>
+
+                      <p className="text-sm text-foreground leading-relaxed">
+                        This academic resource provides an overview of important
+                        concepts related to the subject. It introduces key ideas,
+                        explains relevant principles, and highlights practical
+                        applications that students should understand. The material also includes useful explanations and
+                        examples that can help students revise the topic
+                        and strengthen their understanding.
+                      </p>
+
+                      {/* Divider between summary and disclaimer */}
+                      <hr className="my-4 border-0 border-t border-border/90" />
+
+                      <p className="text-xs text-muted-foreground mt-4 italic">
+                        <strong className="font-bold not-italic">Note:</strong>{" "}
+                        This AI-generated summary is based on the resource content and
+                        may contain inaccuracies, misinterpretations or missing information.
+                        It is intended as a supplementary learning aid and should not
+                        replace reading the original document. For a complete and accurate
+                        understanding, please review the full resource, as it may contain
+                        additional topics, examples, and important details not captured
+                        in this summary.
+                      </p>
+
+                    </div>
+                  )}
+
+                </div>
+
                 <div className="flex flex-wrap gap-3">
+
+                  {/* Expandable AI Summary Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAISummary(!showAISummary)}
+                    aria-label={showAISummary ? "Hide AI summary" : "Show AI summary"}
+                    aria-expanded={showAISummary}
+                    className="
+    group
+    inline-flex items-center justify-center
+    bg-primary text-primary-foreground
+    rounded-full
+    p-2
+    hover:px-3
+    transition-all duration-300 ease-in-out
+    shadow-sm hover:shadow-md
+    shrink-0
+  "
+                  >
+                    <Sparkles className="w-4 h-4 shrink-0" />
+
+                    <span
+                      className={`
+      text-xs font-medium
+      overflow-hidden whitespace-nowrap
+      transition-all duration-300 ease-in-out
+      ${showAISummary
+                          ? "max-w-32 ml-1.5 opacity-100"
+                          : "max-w-0 ml-0 opacity-0 group-hover:max-w-32 group-hover:ml-1.5 group-hover:opacity-100"
+                        }
+    `}
+                    >
+                      {showAISummary ? "Hide AI summary" : "Show AI summary"}
+                    </span>
+                  </button>
+
+                  {/* Download Button */}
                   <button
                     onClick={handleDownload}
                     disabled={!canDownload || downloading}
@@ -689,6 +796,7 @@ export default function ResourceDetails() {
                         : `Download (${formatFileSize(resource.file_size)})`}
                   </button>
 
+                  {/* Save Button */}
                   <button
                     onClick={handleSave}
                     disabled={saving}
@@ -700,6 +808,7 @@ export default function ResourceDetails() {
                     {saving ? "Please wait..." : isSaved ? "Saved" : "Save"}
                   </button>
 
+                  {/* Like Button */}
                   <button
                     type="button"
                     onClick={handleLike}
@@ -713,6 +822,7 @@ export default function ResourceDetails() {
                     {isLiked ? "Liked" : "Like"} ({likeCount})
                   </button>
 
+                  {/* Report Button */}
                   <button
                     type="button"
                     onClick={() => setShowReportForm(true)}
@@ -730,6 +840,7 @@ export default function ResourceDetails() {
                     {hasReported ? "Reported" : "Report"} ({reportCount})
                   </button>
 
+                  {/* Delete Button */}
                   {isOwner && (
                     <button
                       type="button"
@@ -738,7 +849,7 @@ export default function ResourceDetails() {
                       className="inline-flex items-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {deleting ? "Deleting..." : "Delete Resource"}
+                      {deleting ? "Deleting..." : "Delete"}
                     </button>
                   )}
                 </div>
