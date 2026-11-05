@@ -10,15 +10,25 @@ export const REPORT_REASONS = [
 ];
 
 export async function hasReportedResource(resourceId) {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Please sign in to check report status.");
+  }
+
   const { data, error } = await supabase
     .from("resource_reports")
     .select("id")
     .eq("resource_id", resourceId)
-    .maybeSingle();
+    .eq("user_id", user.id)
+    .limit(1);
 
   if (error) throw error;
 
-  return Boolean(data);
+  return (data?.length ?? 0) > 0;
 }
 
 export async function submitResourceReport(resourceId, reason, description = "") {

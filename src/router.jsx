@@ -10,6 +10,10 @@ import Saved from "./pages/Saved";
 import Upload from "./pages/Upload";
 import Settings from "./pages/Settings";
 import ResourceDetails from "./pages/ResourceDetails";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminRoute from "./components/AdminRoute";
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +91,28 @@ export const router = createBrowserRouter([
         <Settings />
       </PrivateRoute>
     )
-  }
+  },
+
+  {
+    path: "/admin",
+    element: (
+      <AdminRoute>
+        <AdminLayout>
+          <AdminOverview />
+        </AdminLayout>
+      </AdminRoute>
+    ),
+  },
+
+  {
+    path: "/admin/reports",
+    element: (
+      <AdminRoute>
+        <AdminLayout>
+          <AdminReports />
+        </AdminLayout>
+      </AdminRoute>
+    ),
+  },
 
 ]);

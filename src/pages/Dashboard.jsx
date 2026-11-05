@@ -377,9 +377,23 @@ export default function Dashboard() {
         {/* Page Heading and Content Policy */}
         <div>
           <div className="mb-3 space-y-2">
-            <h1 className="text-2xl font-semibold mb-2">
-              Welcome, {profile?.display_name || "User"}
-            </h1>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-2xl font-semibold">
+                Welcome, {profile?.display_name || "User"}
+              </h1>
+
+              {/* Only visible to administrators */}
+              {profile?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#003580] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#002766]"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Admin Panel
+                </Link>
+              )}
+            </div>
 
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
               Discover and share academic resources with the IIUM community.

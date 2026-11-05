@@ -6,6 +6,8 @@ import { Label } from '../assets/ui/label'
 import { Button } from '../assets/ui/button'
 import { BookOpen } from 'lucide-react'
 import { Eye, EyeOff } from 'lucide-react'
+import { supabase } from "../supabaseClient";
+import { toast } from "sonner";
 
 const Signin = () => {
 
@@ -17,27 +19,63 @@ const Signin = () => {
 
   const { session, signInUser } = userAuth();
   const navigate = useNavigate();
-  // console.log(session);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+
+    setError("");
     setLoading(true);
+
     try {
+      // Step 1: Authenticate with Supabase
       const result = await signInUser(email, password);
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        setError("Invalid email or password. Please try again.");
+
+      if (!result.success) {
+        setError(
+          result.error || "Invalid email or password. Please try again."
+        );
+        return;
       }
 
+      // Step 2: Get the authenticated user ID
+      const userId = result.data?.user?.id;
 
-    } catch (error) {
+      if (!userId) {
+        setError("Unable to identify the signed-in user.");
+        return;
+      }
+
+      // Step 3: Retrieve the user's role from profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error("Failed to fetch user role:", profileError);
+        setError("Unable to determine your account role.");
+        return;
+      }
+
+      // Step 4: Redirect based on role
+      toast.success("Signed in successfully!");
+
+      if (profile.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+
+    } catch (err) {
+      console.error("Sign in error:", err);
       setError("Something went wrong. Please try again later.");
-      console.error('Sign in error:', error);
+
     } finally {
       setLoading(false);
     }
-  }
+  };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
