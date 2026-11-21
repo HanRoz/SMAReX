@@ -565,3 +565,21 @@ export async function deleteResource(resourceId) {
 
   return true;
 }
+
+export async function generateResourceSummary(resourceId) {
+  const { data, error } = await supabase.functions.invoke("generate-summary", {
+    body: { resourceId },
+  });
+
+  if (error) {
+    throw new Error(
+      data?.error || error.message || "Failed to generate AI summary.",
+    );
+  }
+
+  if (!data?.success) {
+    throw new Error(data?.error || "Summary generation failed.");
+  }
+
+  return data;
+}
