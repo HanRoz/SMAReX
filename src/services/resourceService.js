@@ -566,19 +566,42 @@ export async function deleteResource(resourceId) {
   return true;
 }
 
-export async function generateResourceSummary(resourceId) {
+export async function generateResourceSummary(resourceId, regenerate = false) {
   const { data, error } = await supabase.functions.invoke("generate-summary", {
-    body: { resourceId },
+    body: {
+      resourceId,
+      regenerate,
+    },
   });
 
   if (error) {
-    throw new Error(
-      data?.error || error.message || "Failed to generate AI summary.",
+    let body = data;
+
+    // Supabase may return the Edge Function response
+    // inside error.context.
+    if (!body && error.context instanceof Response) {
+      try {
+        body = await error.context.clone().json();
+      } catch {
+        body = null;
+      }
+    }
+
+    const summaryError = new Error(
+      body?.error || error.message || "Failed to generate AI summary.",
     );
+
+    summaryError.code = body?.code || "UNKNOWN_ERROR";
+
+    throw summaryError;
   }
 
   if (!data?.success) {
-    throw new Error(data?.error || "Summary generation failed.");
+    const summaryError = new Error(data?.error || "Summary generation failed.");
+
+    summaryError.code = data?.code || "UNKNOWN_ERROR";
+
+    throw summaryError;
   }
 
   return data;

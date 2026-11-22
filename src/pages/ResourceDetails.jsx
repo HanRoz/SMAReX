@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Download,
   Bookmark,
-  Flag,
-  Shield,
+  CalendarDays,
+  Download,
   ExternalLink,
   FileText,
-  CalendarDays,
-  User,
+  Flag,
   HardDrive,
-  Trash2,
   Heart,
+  Shield,
   Sparkles,
+  Trash2,
+  User,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Sidebar } from "../components/sidebar";
@@ -30,11 +30,11 @@ import {
 import { recordDownload } from "../services/libraryService";
 
 import {
+  deleteResource,
+  downloadResourceFile,
+  generateResourceSummary,
   getResourceById,
   getThumbnailUrl,
-  downloadResourceFile,
-  deleteResource,
-  generateResourceSummary,
 } from "../services/resourceService";
 
 import {
@@ -44,27 +44,26 @@ import {
 } from "../services/likeService";
 
 import {
-  getComments,
-  postComment,
-  editComment,
   deleteComment,
-  validateComment,
+  editComment,
+  getComments,
+  postComment
 } from "../services/commentService";
 
-import { supabase } from "../supabaseClient";
 import { RefreshCw } from "lucide-react";
 import {
   REPORT_REASONS,
+  getResourceReportCount,
   hasReportedResource,
   submitResourceReport,
-  getResourceReportCount,
 } from "../services/reportService";
+import { supabase } from "../supabaseClient";
 
+import "katex/dist/katex.min.css";
 import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import "katex/dist/katex.min.css";
 
 export default function ResourceDetails() {
   const { id } = useParams();
@@ -100,6 +99,8 @@ export default function ResourceDetails() {
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState("");
+  const [summaryLoaded, setSummaryLoaded] = useState(false);
+  const [summaryRegenerating, setSummaryRegenerating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -559,18 +560,26 @@ export default function ResourceDetails() {
 // AI RESOURCE SUMMARY
 // ---------------------------------------------
 
-useEffect(() => {
-  if (resource) {
-    setAiSummary(resource.ai_summary || "");
-    setSummaryError("");
-  }
-}, [resource]);
+// ---------------------------------------------
+// AI RESOURCE SUMMARY
+// ---------------------------------------------
 
+// Reset summary state when the resource changes.
+useEffect(() => {
+  setAiSummary("");
+  setSummaryLoaded(false);
+  setSummaryError("");
+  setShowAISummary(false);
+}, [id]);
+
+// Load the correct summary for the current user.
+// The Edge Function checks personal summary first,
+// then shared summary, then generates a shared summary.
 const handleAISummary = async () => {
   if (summaryLoading) return;
 
-  // If summary already exists, simply show or hide it.
-  if (aiSummary) {
+  // If already loaded, just show or hide it.
+  if (summaryLoaded) {
     setShowAISummary((previous) => !previous);
     return;
   }
@@ -580,16 +589,10 @@ const handleAISummary = async () => {
     setSummaryError("");
     setShowAISummary(true);
 
-    const result = await generateResourceSummary(id);
+    const result = await generateResourceSummary(id, false);
 
-    setAiSummary(result.summary);
-
-    setResource((previous) => ({
-      ...previous,
-      ai_summary: result.summary,
-      summary_status: "completed",
-      summary_generation_count: result.generation_count,
-    }));
+    setAiSummary(result.summary || "");
+    setSummaryLoaded(true);
 
     toast.success(
       result.cached
@@ -601,11 +604,44 @@ const handleAISummary = async () => {
     console.error("AI summary error:", err);
 
     setSummaryError(
-      err.message || "Unable to generate AI summary."
+      err.message || "Unable to load AI summary."
     );
 
+    toast.error(err.message || "Failed to load AI summary.");
+
+  } finally {
+    setSummaryLoading(false);
+  }
+};
+
+// Generate or update only the current user's personal summary.
+const handleRegenerateAISummary = async () => {
+  if (summaryLoading) return;
+
+  try {
+    setSummaryLoading(true);
+    setSummaryError("");
+    setShowAISummary(true);
+
+    const result = await generateResourceSummary(id, true);
+
+    setAiSummary(result.summary || "");
+    setSummaryLoaded(true);
+
+    toast.success("Your new summary has been regenerated.");
+
+  } catch (err) {
+    console.error("Summary regeneration error:", err);
+
+    // Keep the previous summary if regeneration fails.
+    if (!aiSummary) {
+      setSummaryError(
+        err.message || "Unable to regenerate your summary."
+      );
+    }
+
     toast.error(
-      err.message || "Failed to generate AI summary."
+      err.message || "Failed to regenerate your summary."
     );
 
   } finally {
@@ -921,11 +957,15 @@ const handleAISummary = async () => {
   <button
     type="button"
     onClick={handleAISummary}
-    disabled={summaryLoading || resource.security_status !== "safe"}
+    disabled={
+      summaryLoading ||
+      summaryRegenerating ||
+      resource.security_status !== "safe"
+    }
     aria-label={
       showAISummary
         ? "Hide AI summary"
-        : aiSummary
+        : summaryLoaded
           ? "Show AI summary"
           : "Generate AI summary"
     }
@@ -934,8 +974,7 @@ const handleAISummary = async () => {
       group
       inline-flex items-center justify-center
       bg-primary text-primary-foreground
-      rounded-full
-      p-2
+      rounded-full p-2
       hover:px-3
       transition-all duration-300 ease-in-out
       shadow-sm hover:shadow-md
@@ -944,7 +983,6 @@ const handleAISummary = async () => {
       disabled:cursor-not-allowed
     "
   >
-
     {summaryLoading ? (
       <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
     ) : (
@@ -956,9 +994,10 @@ const handleAISummary = async () => {
         text-xs font-medium
         overflow-hidden whitespace-nowrap
         transition-all duration-300 ease-in-out
-        ${showAISummary || summaryLoading
-          ? "max-w-40 ml-1.5 opacity-100"
-          : "max-w-0 ml-0 opacity-0 group-hover:max-w-40 group-hover:ml-1.5 group-hover:opacity-100"
+        ${
+          showAISummary || summaryLoading
+            ? "max-w-40 ml-1.5 opacity-100"
+            : "max-w-0 ml-0 opacity-0 group-hover:max-w-40 group-hover:ml-1.5 group-hover:opacity-100"
         }
       `}
     >
@@ -966,12 +1005,44 @@ const handleAISummary = async () => {
         ? "Generating..."
         : showAISummary
           ? "Hide AI summary"
-          : aiSummary
+          : summaryLoaded
             ? "Show AI summary"
             : "Generate AI summary"}
     </span>
-
   </button>
+
+  {/* Regenerate Summary Button */}
+  {summaryLoaded && (
+    <button
+      type="button"
+      onClick={handleRegenerateAISummary}
+      disabled={
+        summaryLoading ||
+        summaryRegenerating ||
+        resource.security_status !== "safe"
+      }
+      className="
+        inline-flex items-center gap-2
+        border border-primary text-primary
+        rounded-md px-4 py-2
+        text-sm font-medium
+        hover:bg-primary/10
+        transition-colors
+        disabled:opacity-50
+        disabled:cursor-not-allowed
+      "
+    >
+      <RefreshCw
+        className={`w-4 h-4 ${
+          summaryRegenerating ? "animate-spin" : ""
+        }`}
+      />
+
+      {summaryRegenerating
+        ? "Regenerating..."
+        : "Regenerate AI Summary"}
+    </button>
+  )}
 
                   {/* Download Button */}
                   <button
