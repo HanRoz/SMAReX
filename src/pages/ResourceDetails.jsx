@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Download,
   Bookmark,
-  Flag,
-  Shield,
+  CalendarDays,
+  Download,
   ExternalLink,
   FileText,
-  CalendarDays,
-  User,
+  Flag,
   HardDrive,
-  Trash2,
   Heart,
+  Shield,
   Sparkles,
+  Trash2,
+  User,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Sidebar } from "../components/sidebar";
@@ -30,10 +30,11 @@ import {
 import { recordDownload } from "../services/libraryService";
 
 import {
+  deleteResource,
+  downloadResourceFile,
+  generateResourceSummary,
   getResourceById,
   getThumbnailUrl,
-  downloadResourceFile,
-  deleteResource,
 } from "../services/resourceService";
 
 import {
@@ -43,21 +44,26 @@ import {
 } from "../services/likeService";
 
 import {
-  getComments,
-  postComment,
-  editComment,
   deleteComment,
-  validateComment,
+  editComment,
+  getComments,
+  postComment
 } from "../services/commentService";
 
-import { supabase } from "../supabaseClient";
 import { RefreshCw } from "lucide-react";
 import {
   REPORT_REASONS,
+  getResourceReportCount,
   hasReportedResource,
   submitResourceReport,
-  getResourceReportCount,
 } from "../services/reportService";
+import { supabase } from "../supabaseClient";
+
+import "katex/dist/katex.min.css";
+import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 
 export default function ResourceDetails() {
   const { id } = useParams();
@@ -90,6 +96,11 @@ export default function ResourceDetails() {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportCount, setReportCount] = useState(0);
   const [showAISummary, setShowAISummary] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
+  const [summaryLoaded, setSummaryLoaded] = useState(false);
+  const [summaryRegenerating, setSummaryRegenerating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -544,6 +555,99 @@ export default function ResourceDetails() {
       setReportSubmitting(false);
     }
   };
+
+// ---------------------------------------------
+// AI RESOURCE SUMMARY
+// ---------------------------------------------
+
+// ---------------------------------------------
+// AI RESOURCE SUMMARY
+// ---------------------------------------------
+
+// Reset summary state when the resource changes.
+useEffect(() => {
+  setAiSummary("");
+  setSummaryLoaded(false);
+  setSummaryError("");
+  setShowAISummary(false);
+}, [id]);
+
+// Load the correct summary for the current user.
+// The Edge Function checks personal summary first,
+// then shared summary, then generates a shared summary.
+const handleAISummary = async () => {
+  if (summaryLoading) return;
+
+  // If already loaded, just show or hide it.
+  if (summaryLoaded) {
+    setShowAISummary((previous) => !previous);
+    return;
+  }
+
+  try {
+    setSummaryLoading(true);
+    setSummaryError("");
+    setShowAISummary(true);
+
+    const result = await generateResourceSummary(id, false);
+
+    setAiSummary(result.summary || "");
+    setSummaryLoaded(true);
+
+    toast.success(
+      result.cached
+        ? "AI summary loaded successfully"
+        : "AI summary generated successfully"
+    );
+
+  } catch (err) {
+    console.error("AI summary error:", err);
+
+    setSummaryError(
+      err.message || "Unable to load AI summary."
+    );
+
+    toast.error(err.message || "Failed to load AI summary.");
+
+  } finally {
+    setSummaryLoading(false);
+  }
+};
+
+// Generate or update only the current user's personal summary.
+const handleRegenerateAISummary = async () => {
+  if (summaryLoading) return;
+
+  try {
+    setSummaryLoading(true);
+    setSummaryError("");
+    setShowAISummary(true);
+
+    const result = await generateResourceSummary(id, true);
+
+    setAiSummary(result.summary || "");
+    setSummaryLoaded(true);
+
+    toast.success("Your new summary has been regenerated.");
+
+  } catch (err) {
+    console.error("Summary regeneration error:", err);
+
+    // Keep the previous summary if regeneration fails.
+    if (!aiSummary) {
+      setSummaryError(
+        err.message || "Unable to regenerate your summary."
+      );
+    }
+
+    toast.error(
+      err.message || "Failed to regenerate your summary."
+    );
+
+  } finally {
+    setSummaryLoading(false);
+  }
+};
   return (
     <Sidebar>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -686,12 +790,13 @@ export default function ResourceDetails() {
                   </p>
                 )}
 
-                {/* AI Summarization Section */}
-                <div className="mb-6">
+               
+{/* AI Summarization Section */}
+<div className="mb-6">
 
-                  {/* AI Summary Content */}
-                  {showAISummary && (
-                    <div className="
+  {/* AI Summary Content */}
+  {showAISummary && (
+    <div className="
       mt-4
       p-5
       bg-secondary
@@ -700,79 +805,244 @@ export default function ResourceDetails() {
       animate-in fade-in slide-in-from-top-2 duration-300
     ">
 
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />
 
-                        <h3 className="font-semibold text-foreground">
-                          AI-Generated Summary
-                        </h3>
+        <h3 className="font-semibold text-foreground">
+          AI-Generated Summary
+        </h3>
+      </div>
 
-                      </div>
+      {summaryLoading ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
 
-                      <p className="text-sm text-foreground leading-relaxed">
-                        This academic resource provides an overview of important
-                        concepts related to the subject. It introduces key ideas,
-                        explains relevant principles, and highlights practical
-                        applications that students should understand. The material also includes useful explanations and
-                        examples that can help students revise the topic
-                        and strengthen their understanding.
-                      </p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
 
-                      {/* Divider between summary and disclaimer */}
-                      <hr className="my-4 border-0 border-t border-border/90" />
+          <p className="text-sm text-muted-foreground">
+            Reading document and generating summary...
+          </p>
 
-                      <p className="text-xs text-muted-foreground mt-4 italic">
-                        <strong className="font-bold not-italic">Note:</strong>{" "}
-                        This AI-generated summary is based on the resource content and
-                        may contain inaccuracies, misinterpretations or missing information.
-                        It is intended as a supplementary learning aid and should not
-                        replace reading the original document. For a complete and accurate
-                        understanding, please review the full resource, as it may contain
-                        additional topics, examples, and important details not captured
-                        in this summary.
-                      </p>
+          <p className="text-xs text-muted-foreground">
+            This may take a little while.
+          </p>
 
-                    </div>
-                  )}
+        </div>
 
-                </div>
+      ) : summaryError ? (
 
-                <div className="flex flex-wrap gap-3">
+        <div className="rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/20 p-4">
 
-                  {/* Expandable AI Summary Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowAISummary(!showAISummary)}
-                    aria-label={showAISummary ? "Hide AI summary" : "Show AI summary"}
-                    aria-expanded={showAISummary}
-                    className="
-    group
-    inline-flex items-center justify-center
-    bg-primary text-primary-foreground
-    rounded-full
-    p-2
-    hover:px-3
-    transition-all duration-300 ease-in-out
-    shadow-sm hover:shadow-md
-    shrink-0
-  "
-                  >
-                    <Sparkles className="w-4 h-4 shrink-0" />
+          <p className="text-sm text-red-600 dark:text-red-400">
+               "Something went wrong while generating the summary. Please try again."
+          </p>
 
-                    <span
-                      className={`
-      text-xs font-medium
-      overflow-hidden whitespace-nowrap
+          <button
+            type="button"
+            onClick={handleAISummary}
+            className="mt-3 text-sm font-medium text-red-600 underline"
+          >
+            Try again
+          </button>
+
+        </div>
+
+      ) : aiSummary ? (
+
+      <div className="ai-summary-content text-sm leading-6 text-gray-800 dark:text-black-200 space-y-0">
+     
+<div className="ai-summary-content">
+
+<ReactMarkdown
+  remarkPlugins={[remarkGfm, remarkMath]}
+  rehypePlugins={[rehypeKatex]}
+  components={{
+    h1: ({ children }) => (
+      <h1 className="text-xl font-bold mt-4 mb-2">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="text-lg font-bold mt-3 mb-1">
+        {children}
+      </h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="text-base font-semibold mt-3 mb-1">
+        {children}
+      </h3>
+    ),
+    p: ({ children }) => (
+      <p className="text-sm leading-6 mb-1.5">
+        {children}
+      </p>
+    ),
+    ul: ({ children }) => (
+      <ul className="list-disc pl-5 space-y-0.5 mb-2">
+        {children}
+      </ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal pl-5 space-y-0.5 mb-2">
+        {children}
+      </ol>
+    ),
+    li: ({ children }) => (
+      <li className="text-sm leading-6">
+        {children}
+      </li>
+    ),
+    strong: ({ children }) => (
+      <strong className="font-semibold">
+        {children}
+      </strong>
+    ),
+    table: ({ children }) => (
+      <div className="overflow-x-auto my-2 rounded-lg border border-gray-300 dark:border-gray-700">
+        <table className="w-full text-sm border-collapse bg-gray-50 dark:bg-gray-900">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className="bg-gray-200 dark:bg-gray-700">
+        {children}
+      </thead>
+    ),
+    th: ({ children }) => (
+      <th className="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-left font-semibold text-gray-900 dark:text-white">
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td className="border border-gray-300 dark:border-gray-600 px-2 py-1.5 bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+        {children}
+      </td>
+    ),
+  }}
+>
+  {aiSummary}
+</ReactMarkdown>
+
+</div>
+
+        </div>
+
+      ) : (
+
+        <p className="text-sm text-muted-foreground">
+          No summary available.
+        </p>
+
+      )}
+
+      <hr className="my-4 border-0 border-t border-border/90" />
+
+      <p className="text-xs text-muted-foreground italic">
+        <strong className="font-bold not-italic">Note:</strong>{" "}
+        This AI-generated summary is based on the resource content and
+        may contain inaccuracies, misinterpretations or missing information.
+        It is intended as a supplementary learning aid and should not
+        replace reading the original document. Please review the original
+        resource for complete information.
+      </p>
+
+    </div>
+  )}
+
+</div>
+
+{/* AI Summary Button */}
+<div className="flex flex-wrap gap-3">
+
+  <button
+    type="button"
+    onClick={handleAISummary}
+    disabled={
+      summaryLoading ||
+      summaryRegenerating ||
+      resource.security_status !== "safe"
+    }
+    aria-label={
+      showAISummary
+        ? "Hide AI summary"
+        : summaryLoaded
+          ? "Show AI summary"
+          : "Generate AI summary"
+    }
+    aria-expanded={showAISummary}
+    className="
+      group
+      inline-flex items-center justify-center
+      bg-primary text-primary-foreground
+      rounded-full p-2
+      hover:px-3
       transition-all duration-300 ease-in-out
-      ${showAISummary
-                          ? "max-w-32 ml-1.5 opacity-100"
-                          : "max-w-0 ml-0 opacity-0 group-hover:max-w-32 group-hover:ml-1.5 group-hover:opacity-100"
-                        }
-    `}
-                    >
-                      {showAISummary ? "Hide AI summary" : "Show AI summary"}
-                    </span>
-                  </button>
+      shadow-sm hover:shadow-md
+      shrink-0
+      disabled:opacity-50
+      disabled:cursor-not-allowed
+    "
+  >
+    {summaryLoading ? (
+      <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+    ) : (
+      <Sparkles className="w-4 h-4 shrink-0" />
+    )}
+
+    <span
+      className={`
+        text-xs font-medium
+        overflow-hidden whitespace-nowrap
+        transition-all duration-300 ease-in-out
+        ${
+          showAISummary || summaryLoading
+            ? "max-w-40 ml-1.5 opacity-100"
+            : "max-w-0 ml-0 opacity-0 group-hover:max-w-40 group-hover:ml-1.5 group-hover:opacity-100"
+        }
+      `}
+    >
+      {summaryLoading
+        ? "Generating..."
+        : showAISummary
+          ? "Hide AI summary"
+          : summaryLoaded
+            ? "Show AI summary"
+            : "Generate AI summary"}
+    </span>
+  </button>
+
+  {/* Regenerate Summary Button */}
+  {summaryLoaded && (
+    <button
+      type="button"
+      onClick={handleRegenerateAISummary}
+      disabled={
+        summaryLoading ||
+        summaryRegenerating ||
+        resource.security_status !== "safe"
+      }
+      className="
+        inline-flex items-center gap-2
+        border border-primary text-primary
+        rounded-md px-4 py-2
+        text-sm font-medium
+        hover:bg-primary/10
+        transition-colors
+        disabled:opacity-50
+        disabled:cursor-not-allowed
+      "
+    >
+      <RefreshCw
+        className={`w-4 h-4 ${
+          summaryRegenerating ? "animate-spin" : ""
+        }`}
+      />
+
+      {summaryRegenerating
+        ? "Regenerating..."
+        : "Regenerate AI Summary"}
+    </button>
+  )}
 
                   {/* Download Button */}
                   <button
