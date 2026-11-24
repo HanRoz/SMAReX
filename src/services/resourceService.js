@@ -448,7 +448,21 @@ export async function getDashboardResources() {
 /**
  * Get a resource by ID.
  */
+// export async function getResourceById(resourceId) {
+//   const { data, error } = await supabase
+//     .from("resources")
+//     .select("*")
+//     .eq("id", resourceId)
+//     .single();
+
+//   if (error) throw error;
+
+//   return data;
+// }
+
+
 export async function getResourceById(resourceId) {
+  // Retrieve resource information.
   const { data, error } = await supabase
     .from("resources")
     .select("*")
@@ -457,7 +471,29 @@ export async function getResourceById(resourceId) {
 
   if (error) throw error;
 
-  return data;
+  // Default uploader name.
+  let uploaderName = "Unknown uploader";
+
+  // Retrieve the uploader's public display name.
+  if (data.uploader_id) {
+    const { data: author, error: authorError } = await supabase
+      .from("comment_author_names")
+      .select("display_name")
+      .eq("user_id", data.uploader_id)
+      .maybeSingle();
+
+    if (authorError) {
+      console.error("Failed to retrieve uploader name:", authorError);
+    } else {
+      uploaderName =
+        author?.display_name?.trim() || "Unknown uploader";
+    }
+  }
+
+  return {
+    ...data,
+    uploaderName,
+  };
 }
 
 /**
