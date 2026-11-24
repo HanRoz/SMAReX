@@ -329,10 +329,19 @@ export async function uploadResource({
         thumbnail_path: thumbnailPath,
         security_status: "safe",
 
+        // // Security metadata
+        // file_sha256: scanResult.sha256,
+        // vt_report_url: scanResult.reportUrl,
+        // vt_scanned_at: new Date().toISOString(),
         // Security metadata
         file_sha256: scanResult.sha256,
         vt_report_url: scanResult.reportUrl,
         vt_scanned_at: new Date().toISOString(),
+
+        // Detailed security metadata
+        vt_scan_stats: scanResult.scanStats ?? null,
+        file_signature_validated:
+          scanResult.fileSignatureValidated ?? null,
       })
       .select()
       .single();

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, FileText, CalendarDays, HardDrive, ShieldCheck, Download, Heart, Bookmark, RefreshCw } from "lucide-react";
+import { Search, FileText, CalendarDays, HardDrive, ShieldCheck, Download, Info, Heart, Bookmark, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "../components/sidebar";
+import ResourceSecurityDialog from "../components/ResourceSecurityDialog";
 import { userAuth } from "../context/AuthContext";
 import { supabase } from "../supabaseClient";
 
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [downloadedIds, setDownloadedIds] = useState(new Set());
 
   const [resources, setResources] = useState([]);
+  const [securityResource, setSecurityResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -370,8 +372,21 @@ export default function Dashboard() {
     }
   };
 
+  // return (
+  //   <Sidebar>
+  //     <div className="space-y-6">
   return (
     <Sidebar>
+      {/* Security Details Dialog */}
+      <ResourceSecurityDialog
+        key={securityResource?.id}
+        open={Boolean(securityResource)}
+        onOpenChange={(open) => {
+          if (!open) setSecurityResource(null);
+        }}
+        resource={securityResource}
+      />
+
       <div className="space-y-6">
 
         {/* Page Heading and Content Policy */}
@@ -536,6 +551,25 @@ export default function Dashboard() {
                       >
                         {status.label}
                       </span>
+                      {isSafe && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSecurityResource(resource);
+                          }}
+                          className="
+      inline-flex items-center gap-1.5
+      rounded-md border border-border
+      px-2 py-1 text-xs font-medium
+      hover:bg-primary/10
+      hover:text-primary transition-colors
+    "
+                        >
+                          Security Details
+                          <Info className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
 
                     <p className="text-sm text-muted-foreground line-clamp-2">

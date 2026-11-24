@@ -8,6 +8,7 @@ import {
   Flag,
   HardDrive,
   Heart,
+  Info,
   Shield,
   Sparkles,
   Trash2,
@@ -18,6 +19,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Sidebar } from "../components/sidebar";
+import ResourceSecurityDialog from "../components/ResourceSecurityDialog";
 
 import { userAuth } from "../context/AuthContext";
 
@@ -71,6 +73,7 @@ export default function ResourceDetails() {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resource, setResource] = useState(null);
+  const [showSecurityDetails, setShowSecurityDetails] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -648,8 +651,19 @@ export default function ResourceDetails() {
       setSummaryLoading(false);
     }
   };
+  // return (
+  //   <Sidebar>
+  //     <div className="max-w-4xl mx-auto space-y-6">
   return (
     <Sidebar>
+      {/* Security Details Dialog */}
+      <ResourceSecurityDialog
+        key={id}
+        open={showSecurityDetails}
+        onOpenChange={setShowSecurityDetails}
+        resource={resource}
+      />
+
       <div className="max-w-4xl mx-auto space-y-6">
         <Link
           to="/dashboard"
@@ -771,7 +785,7 @@ export default function ResourceDetails() {
                   </div>
 
                   {/* VirusTotal Security Details */}
-                  {resource.security_status === "safe" &&
+                  {/* {resource.security_status === "safe" &&
                     /^[a-fA-F0-9]{64}$/.test(resource.file_sha256 || "") && (
                       <a
                         href={`https://www.virustotal.com/gui/file/${resource.file_sha256}`}
@@ -787,7 +801,23 @@ export default function ResourceDetails() {
                         Security Details
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
-                    )}
+                    )} */}
+                  {/* Security Details */}
+                  {resource.security_status === "safe" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSecurityDetails(true)}
+                      className="
+      inline-flex items-center gap-2
+      border border-border rounded-md
+      px-3 py-1.5 text-xs font-medium
+      hover:bg-accent transition-colors
+    "
+                    >
+                      Security Details
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                 </div>
 
