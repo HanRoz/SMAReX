@@ -120,3 +120,48 @@ export async function dismissAdminResourceReports(resourceId) {
 
     return data?.length ?? 0;
 }
+
+
+export async function deleteAdminReportedResource(resourceId, reason) {
+    const {
+        data: { session },
+        error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+        throw new Error("Please sign in as an administrator.");
+    }
+
+    const { data, error } = await supabase.functions.invoke(
+        "admin-delete-resourced",
+        {
+            body: {
+                resourceId,
+                reason,
+            },
+        }
+    );
+
+    if (error) {
+        let message = error.message;
+
+        try {
+            if (error.context) {
+                const response = await error.context.clone().json();
+                message = response.error || message;
+            }
+        } catch {
+            // Keep the original error message.
+        }
+
+        throw new Error(message);
+    }
+
+    if (!data?.success) {
+        throw new Error(
+            data?.error || "Administrator deletion failed."
+        );
+    }
+
+    return data;
+}

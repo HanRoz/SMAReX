@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getAdminReportedResources,
   dismissAdminResourceReports,
+  deleteAdminReportedResource,
 } from "../../services/adminReportService";
 import {
   Calendar,
@@ -61,6 +62,9 @@ export default function AdminReports() {
   const [sortNewest, setSortNewest] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
   const [moderating, setModerating] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -140,6 +144,45 @@ export default function AdminReports() {
       toast.error(err.message || "Failed to dismiss reports.");
     } finally {
       setModerating(false);
+    }
+  };
+
+  const handleDeleteResource = async () => {
+    if (!selected || deleting) return;
+
+    const reason = deleteReason.trim();
+
+    if (reason.length < 10 || reason.length > 500) {
+      toast.error(
+        "Please enter a moderation reason between 10 and 500 characters."
+      );
+      return;
+    }
+
+    try {
+      setDeleting(true);
+
+      await deleteAdminReportedResource(selected.id, reason);
+
+      // Reload actual reports after deletion.
+      const updatedResources = await getAdminReportedResources();
+      setResources(updatedResources);
+
+      setDeleteConfirmOpen(false);
+      setSelectedId(null);
+      setDeleteReason("");
+
+      toast.success(
+        "Resource deleted. Moderation history has been preserved."
+      );
+    } catch (error) {
+      console.error("Admin deletion failed:", error);
+
+      toast.error(
+        error.message || "Failed to delete the resource."
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -366,14 +409,119 @@ export default function AdminReports() {
                     {moderating ? "Processing..." : "Dismiss Reports"}
                   </button>
                 )}
-                <button
+                {/* <button
                   type="button"
                   disabled
                   title="Moderation action will be connected to Supabase next"
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-[9px] bg-red-600 px-4 text-sm font-bold text-white opacity-50 cursor-not-allowed"
                 >
                   <Trash2 className="size-4" /> Delete Resource
+                </button> */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteReason("");
+                    setDeleteConfirmOpen(true);
+                  }}
+                  disabled={deleting}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-[9px] bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="size-4" />
+                  Delete Resource
                 </button>
+
+
+                <Dialog
+                  open={deleteConfirmOpen}
+                  onOpenChange={(open) => {
+                    if (deleting) return;
+
+                    setDeleteConfirmOpen(open);
+
+                    if (!open) {
+                      setDeleteReason("");
+                    }
+                  }}
+                >
+                  <DialogContent className="border-[#D7E0E9] bg-white sm:max-w-[520px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-xl font-bold text-red-700">
+                        <Trash2 className="size-5" />
+                        Delete Reported Resource
+                      </DialogTitle>
+
+                      <DialogDescription className="text-sm text-[#64748B]">
+                        This action permanently removes the resource and its
+                        uploaded files. The moderation history will be preserved.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-3">
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                        <p className="text-sm font-semibold text-red-800">
+                          Resource: {selected?.title || "Unknown"}
+                        </p>
+
+                        <p className="mt-2 text-xs text-red-700">
+                          This action cannot be undone. The resource will no
+                          longer be available to SMAReX users.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="moderation-reason"
+                          className="block text-sm font-semibold text-[#334155]"
+                        >
+                          Reason for deletion
+                        </label>
+
+                        <textarea
+                          id="moderation-reason"
+                          value={deleteReason}
+                          onChange={(event) =>
+                            setDeleteReason(event.target.value)
+                          }
+                          maxLength={500}
+                          rows={4}
+                          disabled={deleting}
+                          placeholder="Explain why this resource violates SMAReX policies..."
+                          className="w-full resize-none rounded-lg border border-[#CBD5E1] p-3 text-sm outline-none focus:border-[#003580] focus:ring-2 focus:ring-[#003580]/10"
+                        />
+
+                        <p className="text-right text-xs text-[#64748B]">
+                          {deleteReason.length}/500 characters
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmOpen(false)}
+                        disabled={deleting}
+                        className="h-10 rounded-lg border border-[#CBD5E1] px-4 text-sm font-semibold text-[#475569] hover:bg-[#F5F7FA] disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDeleteResource}
+                        disabled={
+                          deleting ||
+                          deleteReason.trim().length < 10 ||
+                          deleteReason.trim().length > 500
+                        }
+                        className="inline-flex h-10 items-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Trash2 className="size-4" />
+                        {deleting ? "Deleting..." : "Confirm Deletion"}
+                      </button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
               </div>
             </>
           )}
