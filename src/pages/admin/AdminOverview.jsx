@@ -21,6 +21,8 @@ const INITIAL_DATA = {
   totalResources: 0,
   pendingReports: 0,
   pendingResources: 0,
+  rejectedUploads: 0,
+  recentRejectedUploads: [],
   recentResources: [],
 };
 
@@ -138,10 +140,10 @@ export default function AdminOverview() {
     },
     {
       label: "Rejected Uploads",
-      value: "—",
+      value: data.rejectedUploads,
       icon: ShieldAlert,
       tone: "bg-red-50 text-red-700",
-      description: "Not tracked yet",
+      description: "Threat-detected attempts",
     },
   ];
 
@@ -252,35 +254,144 @@ export default function AdminOverview() {
 
       {/* Rejected Upload Attempts */}
       <section className="overflow-hidden rounded-[10px] border border-[#DDE4EC] bg-white shadow-[0_2px_12px_rgba(15,23,42,0.045)]">
-        <div className="border-b border-[#E5EAF0] px-5 py-5 sm:px-6">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="size-[18px] text-red-600" />
-            <h2 className="text-[17px] font-bold tracking-[-0.015em] text-[#142033]">
-              Rejected Upload Attempts
-            </h2>
+        <div className="flex flex-col gap-3 border-b border-[#E5EAF0] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-[18px] text-red-600" />
+
+              <h2 className="text-[17px] font-bold tracking-[-0.015em] text-[#142033]">
+                Rejected Upload Attempts
+              </h2>
+            </div>
+
+            <p className="mt-1.5 text-sm text-[#64748B]">
+              Latest files rejected due to detected security threats.
+            </p>
           </div>
 
-          <p className="mt-1.5 text-sm text-[#64748B]">
-            Files rejected by security validation.
-          </p>
+          <Link
+            to="/admin/rejected-uploads"
+            className="shrink-0 text-sm font-semibold text-[#003580] hover:underline"
+          >
+            View all rejected uploads &rarr;
+          </Link>
         </div>
 
-        <div className="flex flex-col items-center px-6 py-14 text-center">
-          <div className="grid size-12 place-items-center rounded-full bg-[#E8F1FA] text-[#003580]">
-            <ShieldAlert className="size-5" />
+        {loading ? (
+          <div className="px-6 py-12 text-center text-sm text-[#64748B]">
+            Loading rejected uploads...
           </div>
+        ) : error ? (
+          <div className="px-6 py-12 text-center text-sm text-red-600">
+            Unable to load rejected uploads.
+          </div>
+        ) : data.recentRejectedUploads.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-left">
+              <thead className="bg-[#F8FAFC]">
+                <tr className="border-b border-[#E5EAF0]">
+                  {[
+                    "File Name",
+                    "Uploader",
+                    "Attempt Date",
+                    "Security Status",
+                    "Detections",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="px-6 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-[#64748B]"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-          <p className="mt-4 text-sm font-bold text-[#142033]">
-            Rejected uploads are not tracked yet
-          </p>
+              <tbody className="divide-y divide-[#EDF1F5]">
+                {data.recentRejectedUploads.map((upload) => (
+                  <tr
+                    key={upload.id}
+                    className="hover:bg-[#F8FBFE]"
+                  >
+                    {/* File name and type */}
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600">
+                          <FileText className="size-4" />
+                        </div>
 
-          <p className="mt-1 max-w-md text-sm text-[#64748B]">
-            SMAReX currently does not store rejected VirusTotal
-            upload attempts in a dedicated audit log. This section
-            will display real events once logging is implemented.
-          </p>
-        </div>
+                        <div className="min-w-0">
+                          <p
+                            title={upload.file_name}
+                            className="max-w-[220px] truncate text-sm font-semibold text-[#1E293B]"
+                          >
+                            {upload.file_name}
+                          </p>
+
+                          <p className="mt-0.5 text-xs uppercase text-[#64748B]">
+                            {upload.file_type}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Uploader */}
+                    <td className="px-6 py-3.5 text-sm text-[#475569]">
+                      {upload.uploader}
+                    </td>
+
+                    {/* Attempt date */}
+                    <td className="whitespace-nowrap px-6 py-3.5 text-sm text-[#475569]">
+                      {formatDate(upload.created_at, true)}
+                    </td>
+
+                    {/* Security status */}
+                    <td className="px-6 py-3.5">
+                      <SecurityBadge status={upload.security_status} />
+                    </td>
+
+                    {/* Detection counts */}
+                    <td className="whitespace-nowrap px-6 py-3.5">
+                      <p
+                        className={`text-sm font-semibold ${upload.security_status === "malicious"
+                          ? "text-red-700"
+                          : "text-orange-700"
+                          }`}
+                      >
+                        {upload.malicious_count + upload.suspicious_count}
+                        {" / "}
+                        {upload.total_engines}
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-[#64748B]">
+                        {upload.malicious_count} malicious,
+                        {" "}
+                        {upload.suspicious_count} suspicious
+                      </p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center px-6 py-14 text-center">
+            <div className="grid size-12 place-items-center rounded-full bg-green-50 text-green-600">
+              <ShieldCheck className="size-5" />
+            </div>
+
+            <p className="mt-4 text-sm font-bold text-[#142033]">
+              No rejected uploads recorded
+            </p>
+
+            <p className="mt-1 max-w-md text-sm text-[#64748B]">
+              Upload attempts rejected due to malicious or suspicious
+              VirusTotal detections will appear here.
+            </p>
+          </div>
+        )}
       </section>
+
 
       {/* Recent Uploaded Resources */}
       <section className="overflow-hidden rounded-[10px] border border-[#DDE4EC] bg-white shadow-[0_2px_12px_rgba(15,23,42,0.045)]">

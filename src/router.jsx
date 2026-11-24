@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import ResourceDetails from "./pages/ResourceDetails";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminRejectedUploads from "./pages/admin/AdminRejectedUploads";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminRoute from "./components/AdminRoute";
 
@@ -110,6 +111,17 @@ export const router = createBrowserRouter([
       <AdminRoute>
         <AdminLayout>
           <AdminReports />
+        </AdminLayout>
+      </AdminRoute>
+    ),
+  },
+
+  {
+    path: "/admin/rejected-uploads",
+    element: (
+      <AdminRoute>
+        <AdminLayout>
+          <AdminRejectedUploads />
         </AdminLayout>
       </AdminRoute>
     ),

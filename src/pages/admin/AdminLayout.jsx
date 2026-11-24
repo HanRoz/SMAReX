@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  ShieldAlert,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -24,11 +25,20 @@ const navItems = [
     icon: Flag,
     label: "Reported Materials",
   },
+  {
+    path: "/admin/rejected-uploads",
+    icon: ShieldAlert,
+    label: "Rejected Uploads",
+  },
 ];
 
 export function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const currentPageLabel =
+    navItems.find((item) => item.path === location.pathname)
+      ?.label || "Administration";
 
   const { signOut, profile, session } = userAuth();
 
@@ -228,10 +238,13 @@ export function AdminLayout({ children }) {
               SMAReX Admin
             </p>
 
-            <p className="text-xs text-[#64748B]">
+            {/* <p className="text-xs text-[#64748B]">
               {location.pathname === "/admin"
                 ? "Overview"
                 : "Reported Materials"}
+            </p> */}
+            <p className="text-xs text-[#64748B]">
+              {currentPageLabel}
             </p>
           </div>
         </header>

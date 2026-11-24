@@ -6,6 +6,8 @@ export async function getAdminOverviewData() {
         resourcesResult,
         reportsResult,
         pendingResourcesResult,
+        rejectedUploadsResult,
+        recentRejectedResult,
         recentResult,
     ] = await Promise.all([
         supabase
@@ -22,10 +24,43 @@ export async function getAdminOverviewData() {
             .eq("status", "pending"),
 
         // Get resource IDs from individual pending reports.
+        // supabase
+        //     .from("resource_reports")
+        //     .select("resource_id")
+        //     .eq("status", "pending"),
+
+        // supabase
+        //     .from("resources")
+        //     .select("id, title, uploader_id, created_at, security_status")
+        //     .order("created_at", { ascending: false })
+        //     .limit(5),
+        // Get resource IDs from individual pending reports.
         supabase
             .from("resource_reports")
             .select("resource_id")
             .eq("status", "pending"),
+
+        // Count rejected upload attempts.
+        supabase
+            .from("rejected_uploads")
+            .select("id", { count: "exact", head: true }),
+
+        // Retrieve the five most recent rejected upload attempts.
+        supabase
+            .from("rejected_uploads")
+            .select(`
+        id,
+        uploader_id,
+        file_name,
+        file_type,
+        security_status,
+        malicious_count,
+        suspicious_count,
+        total_engines,
+        created_at
+    `)
+            .order("created_at", { ascending: false })
+            .limit(5),
 
         supabase
             .from("resources")
@@ -39,6 +74,8 @@ export async function getAdminOverviewData() {
         resourcesResult,
         reportsResult,
         pendingResourcesResult,
+        rejectedUploadsResult,
+        recentRejectedResult,
         recentResult,
     ]) {
         if (result.error) throw result.error;
@@ -51,12 +88,23 @@ export async function getAdminOverviewData() {
         )
     );
 
+    // const recentResources = recentResult.data || [];
+
+    // const uploaderIds = [
+    //     ...new Set(
+    //         recentResources
+    //             .map((resource) => resource.uploader_id)
+    //             .filter(Boolean)
+    //     ),
+    // ];
+
     const recentResources = recentResult.data || [];
+    const recentRejectedUploads = recentRejectedResult.data || [];
 
     const uploaderIds = [
         ...new Set(
-            recentResources
-                .map((resource) => resource.uploader_id)
+            [...recentResources, ...recentRejectedUploads]
+                .map((item) => item.uploader_id)
                 .filter(Boolean)
         ),
     ];
@@ -86,6 +134,14 @@ export async function getAdminOverviewData() {
         totalResources: resourcesResult.count ?? 0,
         pendingReports: reportsResult.count ?? 0,
         pendingResources: pendingResourceIds.size,
+        rejectedUploads: rejectedUploadsResult.count ?? 0,
+        
+        recentRejectedUploads: recentRejectedUploads.map((upload) => ({
+            ...upload,
+            uploader:
+                uploaderMap.get(upload.uploader_id) ||
+                "Unknown uploader",
+        })),
 
         recentResources: recentResources.map((resource) => ({
             ...resource,
