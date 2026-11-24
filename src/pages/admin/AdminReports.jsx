@@ -119,7 +119,8 @@ export default function AdminReports() {
   }, [query, resources, sortNewest, tab]);
 
   const handleDismissReports = async () => {
-    if (!selected || moderating) return;
+    // if (!selected || moderating) return;
+    if (!selected || selected.isDeleted || moderating) return;
 
     const confirmed = window.confirm(
       `Dismiss all pending reports for "${selected.title}"?\n\nThe resource will remain available in SMAReX.`
@@ -148,7 +149,8 @@ export default function AdminReports() {
   };
 
   const handleDeleteResource = async () => {
-    if (!selected || deleting) return;
+    // if (!selected || deleting) return;
+    if (!selected || selected.isDeleted || deleting) return;
 
     const reason = deleteReason.trim();
 
@@ -288,8 +290,22 @@ export default function AdminReports() {
                           <FileText className="size-4" />
                         </span>
                         <div>
-                          <p className="max-w-[340px] truncate text-sm font-semibold text-[#1E293B]">{resource.title}</p>
-                          <p className="mt-0.5 text-xs text-[#7A889C]">{resource.uploader}</p>
+                          {/* <p className="max-w-[340px] truncate text-sm font-semibold text-[#1E293B]">{resource.title}</p>
+                          <p className="mt-0.5 text-xs text-[#7A889C]">{resource.uploader}</p> */}
+                          <p className="max-w-[340px] truncate text-sm font-semibold text-[#1E293B]">
+                            {resource.title}
+                          </p>
+
+                          <p className="mt-0.5 text-xs text-[#7A889C]">
+                            {resource.uploader}
+                          </p>
+
+                          {resource.isDeleted && (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                              <Trash2 className="size-3" />
+                              Resource Deleted
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -310,7 +326,9 @@ export default function AdminReports() {
                         onClick={() => setSelectedId(resource.id)}
                         className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#BFCBDA] px-3 text-sm font-bold text-[#003580] transition hover:border-[#003580] hover:bg-[#E8F1FA]"
                       >
-                        <Eye className="size-4" /> Review
+                        {/* <Eye className="size-4" /> Review */}
+                        <Eye className="size-4" />
+                        {resource.isDeleted ? "View Details" : "Review"}
                       </button>
                     </td>
                   </tr>
@@ -341,11 +359,67 @@ export default function AdminReports() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#003580]">Moderation review</p>
                 <DialogTitle className="text-xl font-bold leading-snug tracking-[-0.02em] text-[#142033]">{selected.title}</DialogTitle>
                 <DialogDescription className="text-sm text-[#64748B]">
-                  {selected.reports.length} reports grouped under this resource.
+                  {selected.reports.length}{" "}
+                  {selected.reports.length === 1 ? "report" : "reports"}{" "}
+                  grouped under this resource.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6 px-6 py-6">
+                {/* Moderation History */}
+                {selected.isDeleted && selected.moderation && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[#64748B]">
+                      Moderation Information
+                    </h3>
+
+                    <div className="mt-3 space-y-4 rounded-[10px] border border-red-200 bg-red-50 p-4">
+
+                      <div className="flex items-center gap-2 text-sm font-bold text-red-700">
+                        <Trash2 className="size-4" />
+                        Resource Permanently Deleted
+                      </div>
+
+                      <div className="grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-semibold text-[#64748B]">
+                            Deleted by
+                          </p>
+                          <p className="mt-1 font-semibold text-[#334155]">
+                            {selected.moderation.adminName}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold text-[#64748B]">
+                            Deletion date
+                          </p>
+                          <p className="mt-1 font-semibold text-[#334155]">
+                            {formatDate(selected.moderation.completedAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold text-[#64748B]">
+                          Reason for deletion
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-[#334155]">
+                          {selected.moderation.reason}
+                        </p>
+                      </div>
+
+                      <div className="border-t border-red-200 pt-3">
+                        <p className="text-xs text-red-700">
+                          The original resource and uploaded files have been
+                          permanently removed. Resource information and user
+                          reports are preserved for moderation records.
+                        </p>
+                      </div>
+
+                    </div>
+                  </section>
+                )}
                 <section>
                   <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[#64748B]">Resource information</h3>
                   <div className="mt-3 rounded-[10px] border border-[#E1E7EE] bg-[#F8FAFC] p-4">
@@ -356,13 +430,22 @@ export default function AdminReports() {
                       <p className="flex items-center gap-2 text-[#475569]"><Calendar className="size-4 text-[#003580]" /> Uploaded {formatDate(selected.uploadDate)}</p>
                       <p className="flex items-center gap-2 font-semibold text-emerald-700"><ShieldCheck className="size-4" /> Security status: {selected.securityStatus || "Unknown"}</p>
                     </div>
-                    <Link
+                    {/* <Link
                       to={`/resource/${selected.id}`}
                       className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#003580] hover:underline"
                     >
                       <Eye className="size-4" />
                       View resource
-                    </Link>
+                    </Link> */}
+                    {!selected.isDeleted && (
+                      <Link
+                        to={`/resource/${selected.id}`}
+                        className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#003580] hover:underline"
+                      >
+                        <Eye className="size-4" />
+                        View resource
+                      </Link>
+                    )}
                   </div>
                 </section>
 
@@ -381,7 +464,15 @@ export default function AdminReports() {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-[#7A889C]">{formatDate(report.date)}</span>
-                            <StatusBadge status={report.status} />
+                            <div className="flex flex-col items-end gap-1">
+                              <StatusBadge status={report.status} />
+
+                              {selected.isDeleted && report.originalStatus && (
+                                <span className="text-[10px] text-[#64748B]">
+                                  Before deletion: {report.originalStatus}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-[#64748B]">{report.description}</p>
@@ -397,9 +488,9 @@ export default function AdminReports() {
                   onClick={() => setSelectedId(null)}
                   className="h-10 rounded-[9px] border border-[#CBD5E1] px-4 text-sm font-bold text-[#475569] hover:bg-[#F5F7FA]"
                 >
-                  Cancel
+                  {selected.isDeleted ? "Close" : "Cancel"}
                 </button>
-                {selected.status === "Pending" && (
+                {!selected.isDeleted && selected.status === "Pending" && (
                   <button
                     type="button"
                     onClick={handleDismissReports}
@@ -417,7 +508,7 @@ export default function AdminReports() {
                 >
                   <Trash2 className="size-4" /> Delete Resource
                 </button> */}
-                <button
+                {/* <button
                   type="button"
                   onClick={() => {
                     setDeleteReason("");
@@ -428,8 +519,21 @@ export default function AdminReports() {
                 >
                   <Trash2 className="size-4" />
                   Delete Resource
-                </button>
-
+                </button> */}
+                {!selected.isDeleted && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteReason("");
+                      setDeleteConfirmOpen(true);
+                    }}
+                    disabled={deleting}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[9px] bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 className="size-4" />
+                    Delete Resource
+                  </button>
+                )}
 
                 <Dialog
                   open={deleteConfirmOpen}
