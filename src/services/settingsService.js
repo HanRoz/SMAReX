@@ -33,9 +33,9 @@ export async function getUserSettings() {
 
   return data
     ? {
-      ...defaultSettings,
-      ...data,
-    }
+        ...defaultSettings,
+        ...data,
+      }
     : { ...defaultSettings };
 }
 
@@ -69,30 +69,15 @@ export async function updateUserSettings(changes) {
   return data;
 }
 
-export async function changeUserPassword(
-  currentPassword,
-  newPassword
-) {
-  const user = await getCurrentUser();
-
-  if (!user.email) {
-    throw new Error("Your account has no email address.");
-  }
-
-  // Verify the current password before requesting a change.
-  const { error: verificationError } =
-    await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
-
-  if (verificationError) {
-    throw new Error("Current password is incorrect.");
-  }
-
+export const changeUserPassword = async (currentPassword, newPassword) => {
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
+    currentPassword: currentPassword,
   });
 
-  if (error) throw error;
-}
+  if (error) {
+    throw error;
+  }
+
+  return true;
+};
