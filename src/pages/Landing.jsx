@@ -56,7 +56,7 @@ const features = [
 ];
 
 const featureColors = {
-  blue: 'bg-blue-50 text-blue-600',
+  blue: 'bg-secondary text-primary',
   purple: 'bg-purple-50 text-purple-600',
   green: 'bg-green-50 text-green-600',
   orange: 'bg-orange-50 text-orange-600',
@@ -66,7 +66,7 @@ const featureColors = {
 
 export default function Landing() {
   return (
-    <div className="landing-page min-h-screen overflow-hidden bg-white text-slate-900">
+    <div className="landing-page min-h-screen overflow-x-clip bg-white text-slate-900">
       <style>{`
         @keyframes fade-up {
           from { opacity: 0; transform: translateY(20px); }
@@ -77,18 +77,31 @@ export default function Landing() {
           animation: fade-up 0.7s ease-out both;
         }
 
-        .hero-glow {
-          background:
-            radial-gradient(ellipse at 15% 20%, rgba(59, 130, 246, 0.13), transparent 45%),
-            radial-gradient(ellipse at 85% 65%, rgba(99, 102, 241, 0.10), transparent 40%);
-        }
+.hero-glow {
+  background:
+    radial-gradient(
+      ellipse at 15% 20%,
+      rgba(0, 53, 128, 0.10),
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 85% 65%,
+      rgba(71, 133, 200, 0.12),
+      transparent 40%
+    );
+}
 
-        .gradient-text {
-          background: linear-gradient(110deg, #2563eb 10%, #4f46e5 55%, #7c3aed 90%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
+.gradient-text {
+  background: linear-gradient(
+    110deg,
+    #002454 10%,
+    #003580 50%,
+    #4785C8 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
         .feature-card {
           transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -112,10 +125,10 @@ export default function Landing() {
       `}</style>
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl">
+      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
               <BookOpen size={23} />
             </div>
             <div>
@@ -123,7 +136,7 @@ export default function Landing() {
                 SMAReX
               </span>
               <p className="-mt-1 text-[9px] font-semibold tracking-[2px] text-slate-400">
-                SMART ACADEMIC EXCHANGE CENTRE
+                SMART ACADEMIC RESOURCE EXCHANGE
               </p>
             </div>
           </Link>
@@ -137,7 +150,7 @@ export default function Landing() {
             </Link>
             <Link
               to="/signup"
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
               Get Started
               <ArrowRight size={16} />
@@ -149,9 +162,9 @@ export default function Landing() {
       {/* Hero */}
       <section className="hero-glow relative">
         <div className="animate-fade-up mx-auto max-w-7xl px-6 py-24 text-center sm:py-28 lg:px-8 lg:py-32">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
-            <span className="text-xs font-semibold tracking-wide text-blue-700">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-secondary px-4 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            <span className="text-xs font-semibold tracking-wide text-primary">
               BUILT FOR THE IIUM STUDENT COMMUNITY
             </span>
           </div>
@@ -171,14 +184,14 @@ export default function Landing() {
           <div className="mt-9 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-4 font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-1 hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-3 rounded-xl bg-primary px-7 py-4 font-semibold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-1 hover:shadow-xl"
             >
               Get Started with IIUM Email
               <ArrowRight size={18} />
             </Link>
             <a
               href="#features"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-7 py-4 font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-7 py-4 font-semibold text-slate-700 transition hover:border-primary/30 hover:bg-secondary"
             >
               Explore Features
               <ArrowRight size={17} />
@@ -194,7 +207,7 @@ export default function Landing() {
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto mb-14 max-w-2xl text-center">
-            <span className="text-xs font-bold uppercase tracking-[3px] text-blue-600">
+            <span className="text-xs font-bold uppercase tracking-[3px] text-primary">
               SMAReX Features
             </span>
             <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
@@ -234,11 +247,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA
       <section className="px-6 py-20 lg:px-8">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 px-7 py-14 text-center text-white shadow-xl shadow-blue-200 sm:px-16">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#002454] via-primary to-[#174D91] px-7 py-14 text-center text-white shadow-xl shadow-primary/20 sm:px-16">
           <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-24 -right-10 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
+          <div className="absolute -bottom-24 -right-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
           <div className="relative z-10">
             <h2 className="text-3xl font-extrabold sm:text-4xl">
@@ -250,39 +263,39 @@ export default function Landing() {
             </p>
             <Link
               to="/signup"
-              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-bold text-blue-700 shadow-lg transition hover:-translate-y-1"
+              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-bold text-primary shadow-lg transition hover:-translate-y-1"
             >
               Create Your Account
               <ArrowRight size={18} />
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
             <Link to="/" className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
                 <BookOpen size={20} />
               </div>
               <div>
                 <p className="font-bold text-slate-900">SMAReX</p>
                 <p className="text-[10px] font-medium tracking-wider text-slate-400">
-                  SMART ACADEMIC EXCHANGE CENTRE
+                  SMART ACADEMIC RESOURCE EXCHANGE
                 </p>
               </div>
             </Link>
 
             <div className="flex gap-6 text-sm text-slate-500">
-              <a href="#features" className="transition hover:text-blue-600">
+              <a href="#features" className="transition hover:text-primary">
                 Features
               </a>
-              <Link to="/signin" className="transition hover:text-blue-600">
+              <Link to="/signin" className="transition hover:text-primary">
                 Sign In
               </Link>
-              <Link to="/signup" className="transition hover:text-blue-600">
+              <Link to="/signup" className="transition hover:text-primary">
                 Sign Up
               </Link>
             </div>
