@@ -111,62 +111,56 @@ export const AuthContextProvider = ({ children }) => {
 
   }, []);
 
-  //Sign Up Function
-  const signUpNewUser = async ({
-    email,
-    password,
-    fullName,
-    displayName,
-    matricNumber,
-    kulliyyah
-  }) => {
+  // Sign Up Function
+const signUpNewUser = async ({
+  email,
+  password,
+  fullName,
+  displayName,
+  matricNumber,
+  kulliyyah
+}) => {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
 
-    const { data, error } =
-      await supabase.auth.signUp({
+      options: {
+        emailRedirectTo: `${window.location.origin}/signin`,
 
-        email,
-        password,
-
-        options: {
-
-          data: {
-
-            full_name: fullName,
-
-            display_name: displayName,
-
-            matric_number: matricNumber,
-
-            kulliyyah: kulliyyah
-
-          }
-
+        data: {
+          full_name: fullName,
+          display_name: displayName,
+          matric_number: matricNumber,
+          kulliyyah: kulliyyah
         }
-
-      });
-
+      }
+    });
 
     if (error) {
-
-      console.error(
-        "Error signing up:",
-        error
-      );
+      console.error("Error signing up:", error);
 
       return {
         success: false,
         error: error.message
       };
-
     }
-
 
     return {
       success: true,
-      data
+      data,
+      confirmationRequired: !data.session
     };
 
-  };
+  } catch (error) {
+    console.error("Unexpected signup error:", error);
+
+    return {
+      success: false,
+      error: "An unexpected error occurred during registration."
+    };
+  }
+};
 
   //Sign In Function
   const signInUser = async (

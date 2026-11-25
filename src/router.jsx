@@ -15,11 +15,12 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminRejectedUploads from "./pages/admin/AdminRejectedUploads";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminRoute from "./components/AdminRoute";
+import Landing from "./pages/Landing";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <App />
+  path: "/",
+  element: <Landing />
   },
 
   {
