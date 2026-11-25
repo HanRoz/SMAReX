@@ -439,7 +439,7 @@ const Profile = () => {
               <div className="bg-muted/40 border border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center">
                 <Flag className="w-5 h-5 text-destructive" />
                 <p className="text-2xl font-semibold">
-                  {reportsLoading ? "..." : myReports.length}
+                  {reportsLoading ? "..." : reportsError ? "—" : myReports.length}
                 </p>
                 <p className="text-sm text-muted-foreground">Reported</p>
               </div>
@@ -504,13 +504,14 @@ const Profile = () => {
 
             /* Empty State */
             <div className="
-              text-center
-              py-12
-              bg-card
-              border
-              border-border
-              rounded-lg
-            ">
+    text-center
+    py-12
+    bg-white/40
+    border
+    border-dashed
+    border-primary/20
+    rounded-lg
+  ">
               <BookOpen className="
                 w-12
                 h-12
@@ -667,85 +668,137 @@ const Profile = () => {
 
         </div>
         {/* My Reported Resources */}
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <Flag className="w-5 h-5 text-destructive" />
-          Flagged / Reported Resources
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {myReports.map((report) => (
-            <div
-              key={report.id}
-              className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="flex flex-col sm:flex-row h-full">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Flag className="w-5 h-5 text-destructive" />
+            Flagged / Reported Resources
+          </h2>
 
-                {/* Left: Report Information */}
-                <div className="flex-1 min-w-0 p-5 space-y-3">
+          <Badge variant="secondary">
+            {reportsLoading
+              ? "Loading..."
+              : reportsError
+                ? "Unavailable"
+                : `${myReports.length} ${myReports.length === 1 ? "Report" : "Reports"}`}
+          </Badge>
+        </div>
 
-                  {/* Resource Title and Status */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold break-words">
-                      {report.resource?.title || "Resource unavailable"}
-                    </h3>
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {myReports.map((report) => ( */}
 
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full border ${report.status === "pending"
+        {reportsLoading ? (
+
+          /* Loading State */
+          <div className="text-center py-12 bg-card border border-border rounded-lg">
+            <p className="text-muted-foreground">
+              Loading your reported resources...
+            </p>
+          </div>
+        ) : reportsError ? (
+
+          /* Error State */
+          <div className="text-center py-12 bg-card border border-border rounded-lg">
+            <p className="text-red-600 font-medium">
+              Failed to load reported resources
+            </p>
+
+            <p className="text-sm text-muted-foreground mt-2">
+              {reportsError}
+            </p>
+          </div>
+        ) : myReports.length === 0 ? (
+
+          /* Empty State */
+          <div className="text-center py-12 bg-white/40 border border-dashed border-primary/20 rounded-lg">
+            <Flag className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+
+            <p className="text-muted-foreground mb-2">
+              No reported resources yet
+            </p>
+
+            <p className="text-sm text-muted-foreground">
+              Resources you report will appear here, along with their moderation status.
+            </p>
+          </div>
+        ) : (
+
+          /* Reported Resource Cards */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {myReports.map((report) => (
+
+              <div
+                key={report.id}
+                className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col sm:flex-row h-full">
+
+                  {/* Left: Report Information */}
+                  <div className="flex-1 min-w-0 p-5 space-y-3">
+
+                    {/* Resource Title and Status */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-semibold break-words">
+                        {report.resource?.title || "Resource unavailable"}
+                      </h3>
+
+                      <span className={`text-xs font-medium px-3 py-1 rounded-full border ${report.status === "pending"
                         ? "bg-yellow-50 text-yellow-700 border-yellow-200"
                         : report.status === "reviewed"
                           ? "bg-green-50 text-green-700 border-green-200"
                           : "bg-gray-100 text-gray-600 border-gray-200"
-                      }`}>
-                      {report.status === "pending"
-                        ? "Pending"
-                        : report.status === "reviewed"
-                          ? "Reviewed"
-                          : "Dismissed"}
-                    </span>
-                  </div>
-
-                  {/* Resource Metadata */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      {report.resource?.kulliyyah || "Unknown"}
-                    </span>
-
-                    <span className="flex items-center gap-1">
-                      <GraduationCap className="w-3.5 h-3.5" />
-                      {report.resource?.subject_code || "Unknown"}
-                    </span>
-                  </div>
-
-                  {/* Report Reason */}
-                  <div className="flex items-start gap-2 text-sm">
-                    <Flag className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                    <p>
-                      <span className="font-medium">Reason: </span>
-                      <span className="text-muted-foreground">
-                        {report.reason}
+                        }`}>
+                        {report.status === "pending"
+                          ? "Pending"
+                          : report.status === "reviewed"
+                            ? "Reviewed"
+                            : "Dismissed"}
                       </span>
-                    </p>
+                    </div>
+
+                    {/* Resource Metadata */}
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        {report.resource?.kulliyyah || "Unknown"}
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        {report.resource?.subject_code || "Unknown"}
+                      </span>
+                    </div>
+
+                    {/* Report Reason */}
+                    <div className="flex items-start gap-2 text-sm">
+                      <Flag className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                      <p>
+                        <span className="font-medium">Reason: </span>
+                        <span className="text-muted-foreground">
+                          {report.reason}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Optional Report Description */}
+                    {report.description && (
+                      <p className="text-sm text-muted-foreground break-words">
+                        {report.description}
+                      </p>
+                    )}
+
+                    {/* Report Date */}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <CalendarDays className="w-4 h-4" />
+                      Reported on {formatDate(report.created_at)}
+                    </div>
+
                   </div>
 
-                  {/* Optional Report Description */}
-                  {report.description && (
-                    <p className="text-sm text-muted-foreground break-words">
-                      {report.description}
-                    </p>
-                  )}
-
-                  {/* Report Date */}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <CalendarDays className="w-4 h-4" />
-                    Reported on {formatDate(report.created_at)}
-                  </div>
-
-                </div>
-
-                {/* Right: View Resource Panel */}
-                {report.resource ? (
-                  <Link
-                    to={`/resource/${report.resource_id}`}
-                    className="
+                  {/* Right: View Resource Panel */}
+                  {report.resource ? (
+                    <Link
+                      to={`/resource/${report.resource_id}`}
+                      className="
               group flex sm:w-36 shrink-0 flex-col
               items-center justify-center gap-3
               min-h-28 p-4
@@ -753,28 +806,28 @@ const Profile = () => {
               bg-muted/30 hover:bg-primary/10
               transition-colors duration-200
             "
-                  >
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Eye className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                    >
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Eye className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                      </div>
+
+                      <span className="text-sm font-semibold text-primary text-center">
+                        View Resource
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="sm:w-36 shrink-0 flex items-center justify-center p-4 border-t sm:border-t-0 sm:border-l border-border bg-muted/20">
+                      <span className="text-xs text-muted-foreground text-center">
+                        Unavailable
+                      </span>
                     </div>
+                  )}
 
-                    <span className="text-sm font-semibold text-primary text-center">
-                      View Resource
-                    </span>
-                  </Link>
-                ) : (
-                  <div className="sm:w-36 shrink-0 flex items-center justify-center p-4 border-t sm:border-t-0 sm:border-l border-border bg-muted/20">
-                    <span className="text-xs text-muted-foreground text-center">
-                      Unavailable
-                    </span>
-                  </div>
-                )}
-
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
+            ))}
+          </div>
+        )}
       </div>
     </Sidebar>
   );
