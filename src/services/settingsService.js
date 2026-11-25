@@ -70,12 +70,13 @@ export async function updateUserSettings(changes) {
 }
 
 export const changeUserPassword = async (currentPassword, newPassword) => {
-  const { error } = await supabase.auth.updateUser({
+  const { data, error } = await supabase.auth.updateUser({
     password: newPassword,
-    currentPassword: currentPassword,
+    current_password: currentPassword,
   });
 
   if (error) {
+    console.error("Password update error:", error);
     throw error;
   }
 
